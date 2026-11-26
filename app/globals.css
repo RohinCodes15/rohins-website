@@ -151,6 +151,11 @@
   --text-metric--line-height: 1;
   --text-metric--letter-spacing: -0.03em;
   --text-metric--font-weight: 500;
+  /* Perspective crawl lines: below display so the longest word ("QUANTITATIVE") fits a 320px viewport. */
+  --text-crawl: clamp(2.5rem, 0.75rem + 7vw, 6.5rem);
+  --text-crawl--line-height: 0.95;
+  --text-crawl--letter-spacing: -0.04em;
+  --text-crawl--font-weight: 640;
 
   --ease-datum: cubic-bezier(0.2, 0, 0, 1);
 }
@@ -425,6 +430,44 @@
 @keyframes gallery-drift {
   from { transform: translateY(var(--drift-from)); }
   to { transform: translateY(var(--drift-to)); }
+}
+
+/* Perspective crawl (components/editorial/perspective-crawl.tsx). Flat text in normal flow is the default.
+   With scroll timelines and no reduced-motion preference, the stage sticks for one extra viewport while the
+   text rises from a backward tilt and settles flat. */
+.perspective-crawl {
+  padding-block: var(--spacing-section-sm);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .perspective-crawl {
+      block-size: 200svh;
+      padding-block: 0;
+      view-timeline-name: --crawl;
+    }
+
+    .perspective-crawl-stage {
+      position: sticky;
+      inset-block-start: 0;
+      display: grid;
+      align-items: center;
+      block-size: 100svh;
+      overflow: hidden;
+    }
+
+    .perspective-crawl-text {
+      transform-origin: 50% 100%;
+      animation: crawl-rise linear both;
+      animation-timeline: --crawl;
+      animation-range: contain;
+    }
+  }
+}
+
+@keyframes crawl-rise {
+  from { transform: perspective(800px) rotateX(30deg) translateY(45svh); }
+  to { transform: perspective(800px) rotateX(0) translateY(0); }
 }
 
 /* Architecture diagram: an edge traces itself from source to target when its list entry is pointed at. */

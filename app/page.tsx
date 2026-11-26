@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { PerspectiveCrawl } from "@/components/editorial/perspective-crawl";
 import { SectionHeading } from "@/components/editorial/section-heading";
 import { ProjectCard } from "@/components/editorial/project-card";
 import { Activity, ActivityFrame } from "@/components/sections/activity";
@@ -18,6 +19,13 @@ import { research } from "@/content/research";
 import { githubProfile, site } from "@/content/site";
 import { stack, type StackId } from "@/content/stack";
 import { projectsByStack } from "@/lib/content";
+
+// Dark values are the brief's; light values are darker steps of the same hues so they hold contrast on #fafafa.
+const IDENTITIES = [
+  { text: "SOFTWARE DEVELOPER", color: "light-dark(#0a0a0b, #fafafa)" },
+  { text: "AI ENGINEER", color: "light-dark(#2563eb, #3b82f6)" },
+  { text: "QUANTITATIVE RESEARCH", color: "light-dark(#dc2626, #ef4444)" },
+];
 
 export default function Home() {
   const featured = projects.filter((project) => project.featured);
@@ -93,6 +101,8 @@ export default function Home() {
             </div>
           </Container>
         </section>
+        {/* Repeats site.roleLine, so assistive tech skips it. */}
+        <div aria-hidden="true"><PerspectiveCrawl lines={IDENTITIES} /></div>
         {sections.map(({ id, label, content }, index) => (
           <section key={id} aria-labelledby={id}>
             <SectionHeading id={id} index={String(index + 1).padStart(2, "0")}>{label}</SectionHeading>
