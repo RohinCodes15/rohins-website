@@ -8,13 +8,13 @@ import { leadership } from "@/content/leadership";
 import { projects } from "@/content/projects";
 import { site } from "@/content/site";
 import { stack } from "@/content/stack";
+import { PROJECT_STATUS_LABELS, projectHref } from "@/lib/content";
 import { filterItems, moveIndex, type PaletteItem } from "@/lib/palette";
 import type { Theme } from "@/lib/theme";
 import { setTheme } from "./theme-toggle";
 
 type Item = PaletteItem & ({ href: string; external?: boolean } | { theme: Theme });
 
-const STATUS: Record<string, string> = { completed: "Completed", "in-development": "In development" };
 
 /** Built from the content registries, so the palette lists exactly what the site shows. */
 function buildItems(): Item[] {
@@ -35,9 +35,9 @@ function buildItems(): Item[] {
       id: `project-${project.slug}`,
       group: "Projects",
       label: project.title,
-      hint: `${STATUS[project.status]} · ${project.summary}`,
+      hint: `${PROJECT_STATUS_LABELS[project.status]} · ${project.summary}`,
       keywords: project.stack.map((id) => stack[id].label),
-      href: `/work/${encodeURIComponent(project.slug)}`,
+      href: projectHref(project.slug),
     })),
     ...journal.map((entry): Item => ({ id: `journal-${entry.slug}`, group: "Journal", label: entry.title, hint: entry.summary, keywords: [...entry.topics], href: `/journal/${encodeURIComponent(entry.slug)}` })),
     ...sections,

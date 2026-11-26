@@ -17,7 +17,6 @@
     "check:secrets": "node scripts/check-secrets.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "1.9.0",
     "@vercel/functions": "3.11.4",
     "cn": "0.5.2",
     "motion": "14.14.0",

@@ -7,7 +7,7 @@ import { leadership } from "../content/leadership.ts";
 import { site } from "../content/site.ts";
 import { projects } from "../content/projects.ts";
 import { research } from "../content/research.ts";
-import { duplicateSlugs, findBySlug, projectTitleTransition, projectsByStack } from "./content.ts";
+import { duplicateSlugs, findBySlug, projectHref, projectTitleTransition, projectsByStack } from "./content.ts";
 import type { Project, StackId } from "./types.ts";
 
 const project = (slug: string, stack: string[]): Project => ({
@@ -91,4 +91,9 @@ test("project title transition names are valid CSS identifiers and unique per pr
   assert.equal(projectTitleTransition("Risk Lens.v2"), "project-risk-lens-v2");
   const names = projects.map(({ slug }) => projectTitleTransition(slug));
   assert.equal(new Set(names).size, names.length);
+});
+
+test("projectHref builds the case-study route and encodes the slug", () => {
+  assert.equal(projectHref("risklens"), "/work/risklens");
+  assert.equal(projectHref("a b/c"), "/work/a%20b%2Fc");
 });

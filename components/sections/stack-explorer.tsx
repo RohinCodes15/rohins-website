@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { projectHref } from "@/lib/content";
 import type { StackEntry } from "@/lib/types";
 import type { StackRowsMotion } from "./stack-rows-motion";
 
@@ -17,7 +18,7 @@ function Row({ label, category, usedIn }: Technology) {
       <span>{label}</span>
       <span className="col-span-full row-start-2 text-small text-text-2 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:self-center">
         {usedIn.length > 0 && <>Used in {usedIn.map(({ slug, title }, index) => (
-          <span key={slug}>{index > 0 && ", "}<a href={`/work/${encodeURIComponent(slug)}`} className="hover-underline">{title}</a></span>
+          <span key={slug}>{index > 0 && ", "}<a href={projectHref(slug)} className="hover-underline">{title}</a></span>
         ))}</>}
       </span>
       <span className="col-start-2 row-start-1 self-center font-mono text-meta text-text-2 sm:col-start-3">{category}</span>

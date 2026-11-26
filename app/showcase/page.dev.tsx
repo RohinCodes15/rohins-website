@@ -11,7 +11,6 @@ import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { Separator } from "@/components/ui/separator";
 import { TechnologyBadge } from "@/components/ui/technology-badge";
-import { Tooltip } from "@/components/ui/tooltip";
 import { Certifications } from "@/components/sections/certifications";
 import { Leadership } from "@/components/sections/leadership";
 import { ArticleBody } from "@/components/journal/article-body";
@@ -154,9 +153,6 @@ export default function Showcase() {
               An <Link href="/">internal link</Link> and an <Link href="https://nextjs.org" external>external link</Link>{" "}
               inside running text.
             </p>
-          </Specimen>
-          <Specimen label="Tooltip">
-            <Tooltip trigger={<Button>Hover or focus</Button>}>Supplementary hint text</Tooltip>
           </Specimen>
           <Specimen label="Badge">
             <p>

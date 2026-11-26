@@ -1,4 +1,11 @@
-import type { Project, StackId } from "./types.ts";
+import type { Project, ProjectStatus, StackId } from "./types.ts";
+
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = { completed: "Completed", "in-development": "In development" };
+
+/** The one place the project route shape lives. */
+export function projectHref(slug: string): string {
+  return `/work/${encodeURIComponent(slug)}`;
+}
 
 export function findBySlug<T extends { readonly slug: string }>(
   items: readonly T[],

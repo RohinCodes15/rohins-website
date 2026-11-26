@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { StatusMark } from "@/components/editorial/status-mark";
 import { TechnologyBadge } from "@/components/ui/technology-badge";
 import { stack } from "@/content/stack";
-import { projectTitleTransition } from "@/lib/content";
+import { projectHref, projectTitleTransition } from "@/lib/content";
 import type { Project, StackEntry } from "@/lib/types";
 
 const technologies: Readonly<Record<string, StackEntry>> = stack;
@@ -23,7 +23,7 @@ export function ProjectCard({ project }: { project: Project }) {
         </div>
         <h3 style={{ viewTransitionName: projectTitleTransition(project.slug) }} className="col-span-3 justify-self-start self-baseline pt-5 text-h2 wrap-anywhere sm:col-span-7 lg:col-start-4">
           <Link
-            href={`/work/${encodeURIComponent(project.slug)}`}
+            href={projectHref(project.slug)}
             className="decoration-transparent after:absolute after:inset-0 group-focus-within/project:decoration-signal group-hover/project:decoration-signal"
           >
             {project.title}

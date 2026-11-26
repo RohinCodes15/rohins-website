@@ -18,6 +18,23 @@ Updated November 26, 2026, after the final visual acceptance audit. The site is 
 - Navigation and stack filters get 140 ms colour transitions. A hovered or focused nav link shows an ink square where the probe marker sits. Unpressed filters are `--text-2`.
 - Checks: lint, typecheck, 42 unit tests, build with secret scan, 33 smoke checks (axe included). Screenshots at 390 and 1440 px in both themes, plus overflow at 320, 1024 and 2560 px, all 0.
 
+## Production readiness audit (2026-11-26)
+
+Scope: dependencies, dead code, duplicated logic, TypeScript, hydration, and the GitHub data layer. Method: per-dependency import search, an export-usage scan over `app/`, `components/`, `lib/`, `content/`, an unused-CSS-utility scan, a search for TODOs, lint suppressions, and `any`, a review of `lib/github/` and `lib/env.ts`, and every route loaded in `next dev` in both themes with console warnings and errors captured. A knip run was not possible: fetching it through `npx` was blocked.
+
+Fixed:
+
+- **Console warning on every page.** `Permissions-Policy` listed `browsing-topics`, which current Chromium rejects as unrecognized. Removed from `next.config.ts`.
+- **Duplicated status labels.** `command-palette.tsx` had its own loosely typed (`Record<string, string>`) copy of the labels in `status-mark.tsx`. Both now use `PROJECT_STATUS_LABELS` (`lib/content.ts`), typed by `ProjectStatus`.
+- **Duplicated route building.** `/work/${encodeURIComponent(slug)}` was built in four places. `projectHref` (`lib/content.ts`) now owns it; unit test added.
+- **Dead code and dependency.** `components/ui/tooltip.tsx` was used only by the development showcase, and it was the only user of `@base-ui/react`. Both removed.
+
+Reviewed, no change needed: every remaining dependency has a production import; all custom CSS utilities are used; `strict` TypeScript with no suppressions or `any`; `lib/github/` turns every failure (timeout, network, HTTP status, malformed JSON, rate limit, validation) into an `unavailable` result, with unit tests. Exports flagged as unused are types or constants used inside their own module, or test-only integrity checks (`duplicateSlugs`, `createActivityReader`).
+
+Known, not fixed (dev mode only): `/journal` logs "Could not validate `instant`" while the journal is empty, because the route calls `notFound()`; production returns 404, as the smoke suite checks. The 404 page's "script tag" warning is listed under Known limits.
+
+After the fixes: lint and typecheck pass; 69 of 69 unit tests; build and secret scan pass; smoke 59 passed and 1 skipped; the 96-render visual sweep and interaction checks pass; no visual change.
+
 ## Visual acceptance audit (2026-11-26)
 
 Method: a Playwright sweep of 8 routes (`/`, five project pages, `/lab`, an unknown path) at 320, 390, 768, 1024, 1440, and 2560 px in light and dark: 96 renders. Each render checks horizontal overflow, elements extending past the viewport, cumulative layout shift (fail above 0.05), console errors, and axe (390 and 1440 px). Full-page screenshots were reviewed at 390 and 1440 px in both themes. Interactive checks ran in both themes at 390 and 1440 px: command palette search and Enter, lab sliders and resampling, the architecture diagram, and the motion checks (probe glide, stack filter reflow, press, View Transition, diagram trace) with and without reduced motion.
@@ -110,7 +127,7 @@ Checked and left unchanged:
 
 - Palette: opens from the button and from Cmd/Ctrl+K, filters, wraps with arrows, keeps focus in the input, and closes on Escape with focus back on Search. No overflow at 375 px. The dialog is opaque once its 140–240 ms drop-in ends.
 - Regression intervals keep the 1.96 normal value, as the page already explains. At n = 30 the exact t value is 2.05, so true coverage there is about 94%.
-- Dependencies: Phase 6 added none. `motion` and `@base-ui/react` are used only by the development showcase today. Both stay: Motion was pinned at the owner's request, and Base UI is the primitive layer of the shadcn `base-nova` style in `components.json`. Neither ships in production bundles.
+- Dependencies: Phase 6 added none. `motion` now ships only in the lazily loaded stack-filter chunk (ARCHITECTURE D19). `@base-ui/react` and the unused `components/ui/tooltip.tsx` were removed in the 2026-11-26 production readiness audit; `shadcn add` reinstalls Base UI if a future primitive needs it.
 - New test: `tests/lab.spec.ts` "charts never paint wider than the page and keep distinct axis labels at extreme settings". The unit test in `lib/lab/lab.test.ts` now covers the uneven-stride end time and the centred flat histogram.
 
 ## Composition pass (2026-11-26)
@@ -121,17 +138,17 @@ Checked and left unchanged:
 
 ## Verified locally
 
-Results from the final run on 2026-11-26, after the visual acceptance audit. The same steps also run in GitHub Actions (`.github/workflows/ci.yml`) on every push to `main`.
+Results from the final run on 2026-11-26, after the production readiness audit. The same steps also run in GitHub Actions (`.github/workflows/ci.yml`) on every push to `main`.
 
 | Check | Result |
 | --- | --- |
 | `npm run lint` | Pass, no warnings |
 | `npm run typecheck` | Pass |
-| `npm test` | 68 of 68 passed. Coverage 99.61% line, 96.88% branch, 98.08% function on `lib/` |
-| `npm run build` (postbuild secret scan) | Pass. 86 files scanned, no credentials. All five project pages and `/lab` prerender statically; `/journal` returns 404 while empty |
+| `npm test` | 69 of 69 passed. Coverage 99.62% line, 96.89% branch, 98.10% function on `lib/` |
+| `npm run build` (postbuild secret scan) | Pass. 87 files scanned, no credentials. All five project pages and `/lab` prerender statically; `/journal` returns 404 while empty |
 | `npm run test:smoke` (Chromium desktop and Pixel 7, axe included) | 59 passed, 1 skipped by design (duplicate viewport sweep on mobile) |
 | `npm audit` | 0 vulnerabilities |
-| Initial JavaScript | Homepage 186.9 KiB, `/work/accessforge` 190.4 KiB, `/lab` 191.3 KiB: gzip -9 of every script the HTML references. Under the 200 KiB budget |
+| Initial JavaScript | Homepage 187.0 KiB, `/work/accessforge` 190.4 KiB, `/lab` 191.3 KiB: gzip -9 of every script the HTML references. Under the 200 KiB budget |
 | Visual sweep | 96 of 96 renders pass (see Visual acceptance audit) |
 
 Not run: Lighthouse and field Web Vitals, Firefox and Safari, physical devices, and manual screen-reader passes.
@@ -146,7 +163,7 @@ Not run: Lighthouse and field Web Vitals, Firefox and Safari, physical devices, 
   - The first request for an unlisted `/work/` slug returns HTTP 200 with the not-found page; later requests return 404 (Cache Components).
   - `next dev` logs a React "script tag" warning on the not-found page, because the root layout re-renders on the client. `ThemeRestore` covers the theme.
   - The heatmap redesign has been checked only on synthetic fixtures until B2 supplies live data.
-  - Initial JavaScript leaves 13.1 KiB of headroom on the homepage and 8.7 KiB on `/lab`.
+  - Initial JavaScript leaves 13.0 KiB of headroom on the homepage and 8.7 KiB on `/lab`.
   - `tests/theme.spec.ts` "axe passes with Dark chosen on a light OS" failed once in a full run on 2026-11-25, then passed 3 times alone and in 2 further full runs. The cause was not found; watch it in CI.
 
 ## Production readiness
