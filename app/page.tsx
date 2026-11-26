@@ -1,6 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import { PerspectiveCrawl } from "@/components/editorial/perspective-crawl";
 import { SectionHeading } from "@/components/editorial/section-heading";
+import { ParallaxGallery } from "@/components/editorial/parallax-gallery";
 import { ProjectCard } from "@/components/editorial/project-card";
 import { Activity, ActivityFrame } from "@/components/sections/activity";
 import { StackExplorer } from "@/components/sections/stack-explorer";
@@ -14,11 +15,12 @@ import { journal } from "@/content/journal";
 import { Leadership } from "@/components/sections/leadership";
 import { certifications } from "@/content/certifications";
 import { leadership } from "@/content/leadership";
+import { closerLook } from "@/content/gallery";
 import { projects } from "@/content/projects";
 import { research } from "@/content/research";
 import { githubProfile, site } from "@/content/site";
 import { stack, type StackId } from "@/content/stack";
-import { projectsByStack } from "@/lib/content";
+import { findBySlug, projectHref, projectsByStack } from "@/lib/content";
 
 // Dark values are the brief's; light values are darker steps of the same hues so they hold contrast on #fafafa.
 const IDENTITIES = [
@@ -26,6 +28,8 @@ const IDENTITIES = [
   { text: "AI ENGINEER", color: "light-dark(#2563eb, #3b82f6)" },
   { text: "QUANTITATIVE RESEARCH", color: "light-dark(#dc2626, #ef4444)" },
 ];
+
+const MAX_SCREEN_RATIO = 5 / 4;
 
 export default function Home() {
   const featured = projects.filter((project) => project.featured);
@@ -36,6 +40,18 @@ export default function Home() {
   const sections: { id: string; label: string; content: ReactNode }[] = [];
   if (featured.length) sections.push({
     id: "work", label: "Selected work", content: featured.map((project) => <ProjectCard key={project.slug} project={project} />),
+  });
+  // Phone-shaped screens show their top 4:5 so no single screen fills a column.
+  const screens = closerLook.map(({ project, ...image }) => ({
+    ...image, height: Math.min(image.height, Math.round(image.width * MAX_SCREEN_RATIO)), href: projectHref(project), label: findBySlug(projects, project)?.title,
+  }));
+  if (screens.length) sections.push({
+    id: "closer-look", label: "A Closer Look", content: (
+      <Container>
+        <p className="grid-main max-w-prose text-lead text-text-2">Exploring the interfaces, systems, and ideas behind my work.</p>
+        <ParallaxGallery images={screens} sizes="(min-width: 82.5rem) 26rem, 32vw" className="col-span-full mt-8 lg:mt-10 sm:[--gallery-aspect:3/2]" />
+      </Container>
+    ),
   });
 
   if (technologies.length) sections.push({

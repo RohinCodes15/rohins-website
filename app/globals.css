@@ -398,8 +398,8 @@
 
 /* Project screen gallery (components/editorial/parallax-gallery.tsx). The static grid is the default and shows
    every screen. With scroll timelines and no reduced-motion preference, the frame crops to 4:3 and each column
-   drifts within it as the gallery crosses the viewport; travel stays under 45% of a column, so the frame never
-   shows past a column's end. */
+   drifts within it as the gallery crosses the viewport; travel stays at or under 36% of a column, so the frame
+   never shows past a column's end (lib/gallery.ts balances column depths). */
 .parallax-gallery {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -410,7 +410,7 @@
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .parallax-gallery {
-      aspect-ratio: 4 / 3;
+      aspect-ratio: var(--gallery-aspect, 4 / 3);
       overflow: hidden;
       view-timeline-name: --gallery;
     }
@@ -421,10 +421,44 @@
       animation-range: cover;
     }
 
-    .parallax-column:nth-child(1) { --drift-from: 0%; --drift-to: -42%; }
-    .parallax-column:nth-child(2) { --drift-from: -42%; --drift-to: 0%; }
-    .parallax-column:nth-child(3) { --drift-from: -12%; --drift-to: -38%; }
+    .parallax-column:nth-child(1) { --drift-from: 0%; --drift-to: -36%; }
+    .parallax-column:nth-child(2) { --drift-from: -36%; --drift-to: 0%; }
+    .parallax-column:nth-child(3) { --drift-from: -10%; --drift-to: -32%; }
   }
+}
+
+/* A linked screen: a slight lift on hover, and the project name for pointer and keyboard users. */
+.gallery-link {
+  position: relative;
+  display: block;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+
+  & img {
+    transition: transform var(--duration-ui) ease-out, filter var(--duration-ui) ease-out;
+  }
+}
+
+.gallery-label {
+  position: absolute;
+  inset-inline-start: 0.5rem;
+  inset-block-end: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--text-small);
+  opacity: 0;
+  transition: opacity var(--duration-ui) ease-out;
+}
+
+.gallery-link:is(:hover, :focus-visible) {
+  & img { transform: scale(1.02); filter: brightness(1.05); }
+  & .gallery-label { opacity: 1; }
 }
 
 @keyframes gallery-drift {

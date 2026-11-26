@@ -90,7 +90,14 @@ function caseStudySections(project: Project): Section[] {
       </dl>
     </Container>
   ) });
-  if (project.gallery?.images.length) sections.push({ id: "screens", label: "Screens", content: <Container><ParallaxGallery gallery={project.gallery} /></Container> });
+  if (project.gallery?.images.length) sections.push({ id: "screens", label: "Screens", content: (
+    <Container>
+      <figure className="grid-main min-w-0">
+        <ParallaxGallery images={project.gallery.images} sizes="(min-width: 64rem) 14rem, 30vw" className="rounded-sm border border-rule-strong bg-surface p-3 sm:p-4" />
+        <figcaption className="mt-3 max-w-prose text-small text-text-2">{project.gallery.caption}</figcaption>
+      </figure>
+    </Container>
+  ) });
   if (project.outcomes.length) sections.push({ id: "outcomes", label: "Verified outcomes", content: (
     <Container>
       <dl className="grid-figure grid gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">

@@ -77,3 +77,14 @@ test("the development showcase is not part of the production build", async ({ pa
   const response = await page.goto("/showcase");
   expect(response?.status()).toBe(404);
 });
+
+test("the homepage gallery links every screen to its case study", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 2, name: "A Closer Look" })).toBeVisible();
+  const links = page.locator(".parallax-gallery a");
+  await expect(links).toHaveCount(14);
+  for (const href of await links.evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute("href") ?? ""))) expect(href).toMatch(/^\/work\/(accessforge|risklens|ledger)$/);
+  for (const alt of await links.locator("img").evaluateAll((images) => images.map((image) => image.getAttribute("alt") ?? ""))) expect(alt.length).toBeGreaterThan(20);
+  await links.first().focus();
+  await expect(links.first().locator(".gallery-label")).toHaveCSS("opacity", "1");
+});
