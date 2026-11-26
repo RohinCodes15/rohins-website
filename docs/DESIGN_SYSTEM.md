@@ -274,7 +274,7 @@ Excluded: cards with shadows, gradients, glows, glass, pills or chips, avatars, 
 
 ## 7. Motion
 
-**Principle:** motion confirms an action or shows a measurement. Nothing moves on load. The only scroll-linked motion is the section datum line drawing in (revised 2026-11-26): it moves `transform` only, never hides text, and never takes over scrolling.
+**Principle:** motion confirms an action or shows a measurement. Nothing moves on load. Two effects are scroll-linked (revised 2026-11-26): the section datum line drawing in, and the project screen gallery's column drift. Both move `transform` only on CSS scroll timelines, never hide content, and never take over scrolling.
 
 | Interaction | Property | Duration | Easing |
 | --- | --- | --- | --- |
@@ -287,6 +287,7 @@ Excluded: cards with shadows, gradients, glows, glass, pills or chips, avatars, 
 | Current-section probe | one 6 px probe square glides along the rail to the current section | 320 ms | `--ease-spring` |
 | Button press | `transform: scale(0.97)` on press, springs back on release (`press` utility) | 60 ms in, 320 ms out | `--ease-spring` |
 | Page transition (home ↔ case study) | cross-document View Transition: the project title carries over into the case-study heading, the rest cross-fades | 180 ms fade, 320 ms title | `--ease-spring` |
+| Project screen gallery | three columns of real screens drift at different speeds inside a 4:3 frame (the middle one against the others) while the gallery crosses the viewport; CSS scroll timeline. Without support or with reduced motion, a static grid shows every screen | scroll-linked | `linear` |
 | Architecture diagram trace | pointing at a flow entry draws its edge in `--signal` (`stroke-dashoffset`) | 320 ms | `--ease-spring` |
 | Copy confirmation | text swap, then revert after 1.5 s (no animation) | — | — |
 | Activity cell inspect | outline appears instantly; the readout updates instantly | 0 ms | — |

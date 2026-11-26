@@ -68,6 +68,8 @@ export interface Project {
   readonly links: readonly Link[];
   readonly featured: boolean;
   readonly caseStudy?: CaseStudy;
+  /** Real screens of the project, shown as a scroll gallery. One caption covers the set and says where they came from. */
+  readonly gallery?: { readonly caption: string; readonly images: readonly Omit<Figure, "caption">[] };
   readonly repository?: Repository;
 }
 

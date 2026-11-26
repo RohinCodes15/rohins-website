@@ -91,3 +91,12 @@ test("the journal stays unpublished while it has no entries", async ({ page }) =
   await page.goto("/");
   await expect(page.getByRole("link", { name: /journal/i })).toHaveCount(0);
 });
+
+test("a project gallery shows every screen with alt text", async ({ page }) => {
+  await page.goto("/work/ledger");
+  await expect(page.getByRole("heading", { level: 2, name: "Screens" })).toBeVisible();
+  const screens = page.locator(".parallax-gallery img");
+  await expect(screens).toHaveCount(9);
+  for (const alt of await screens.evaluateAll((images) => images.map((image) => image.getAttribute("alt") ?? ""))) expect(alt.length).toBeGreaterThan(20);
+  await expect(page.getByText(/Nine screens from the game/)).toBeVisible();
+});

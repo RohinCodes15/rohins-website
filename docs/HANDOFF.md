@@ -18,6 +18,12 @@ Updated November 26, 2026, after the final visual acceptance audit. The site is 
 - Navigation and stack filters get 140 ms colour transitions. A hovered or focused nav link shows an ink square where the probe marker sits. Unpressed filters are `--text-2`.
 - Checks: lint, typecheck, 42 unit tests, build with secret scan, 33 smoke checks (axe included). Screenshots at 390 and 1440 px in both themes, plus overflow at 320, 1024 and 2560 px, all 0.
 
+## Project screen gallery (2026-11-26)
+
+- Owner request: add Skiper UI's Skiper 30 (a parallax image gallery). As shipped it uses Lenis smooth scrolling (scroll hijacking), 13 stock images that are not included, and `framer-motion` plus `lenis`, which would breach the JS budget. The owner chose to adapt it instead: `components/editorial/parallax-gallery.tsx` plus `.parallax-gallery` in `app/globals.css`, a CSS scroll timeline with no JavaScript and no new dependency. No Skiper code is used; the component comment credits the idea.
+- Data: optional `Project.gallery` (`lib/types.ts`). The project page adds a Screens section when it is set. Ledger uses it with nine real screens from its repository (`public/work/ledger/`, 460 × 780 PNG), each with alt text written from the image.
+- Verified in Chromium at 1440 and 390 px: columns drift at different speeds and the middle one against the others, no column end shows inside the frame, all nine images load, no overflow, no console errors. Under reduced motion the static grid shows every screen. Smoke test added (`tests/portfolio.spec.ts`).
+
 ## Production readiness audit (2026-11-26)
 
 Scope: dependencies, dead code, duplicated logic, TypeScript, hydration, and the GitHub data layer. Method: per-dependency import search, an export-usage scan over `app/`, `components/`, `lib/`, `content/`, an unused-CSS-utility scan, a search for TODOs, lint suppressions, and `any`, a review of `lib/github/` and `lib/env.ts`, and every route loaded in `next dev` in both themes with console warnings and errors captured. A knip run was not possible: fetching it through `npx` was blocked.

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArchitectureDiagram } from "@/components/editorial/architecture-diagram";
+import { ParallaxGallery } from "@/components/editorial/parallax-gallery";
 import { SectionHeading } from "@/components/editorial/section-heading";
 import { StatusMark } from "@/components/editorial/status-mark";
 import { SectionNavigation } from "@/components/site/section-navigation";
@@ -89,6 +90,7 @@ function caseStudySections(project: Project): Section[] {
       </dl>
     </Container>
   ) });
+  if (project.gallery?.images.length) sections.push({ id: "screens", label: "Screens", content: <Container><ParallaxGallery gallery={project.gallery} /></Container> });
   if (project.outcomes.length) sections.push({ id: "outcomes", label: "Verified outcomes", content: (
     <Container>
       <dl className="grid-figure grid gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
@@ -161,7 +163,8 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           </Container>
         </section>
         {sections.map(({ id, label, content }, index) => (
-          <section key={id} aria-labelledby={id}>
+          // The tall metadata column already spaces the overview from the first section.
+          <section key={id} aria-labelledby={id} className={index === 0 ? "lg:[&>.section-heading]:pt-8" : undefined}>
             <SectionHeading id={id} index={String(index + 1).padStart(2, "0")}>{label}</SectionHeading>
             {content}
           </section>

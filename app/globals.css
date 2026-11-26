@@ -391,6 +391,42 @@
   }
 }
 
+/* Project screen gallery (components/editorial/parallax-gallery.tsx). The static grid is the default and shows
+   every screen. With scroll timelines and no reduced-motion preference, the frame crops to 4:3 and each column
+   drifts within it as the gallery crosses the viewport; travel stays under 45% of a column, so the frame never
+   shows past a column's end. */
+.parallax-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .parallax-gallery {
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      view-timeline-name: --gallery;
+    }
+
+    .parallax-column {
+      animation: gallery-drift linear both;
+      animation-timeline: --gallery;
+      animation-range: cover;
+    }
+
+    .parallax-column:nth-child(1) { --drift-from: 0%; --drift-to: -42%; }
+    .parallax-column:nth-child(2) { --drift-from: -42%; --drift-to: 0%; }
+    .parallax-column:nth-child(3) { --drift-from: -12%; --drift-to: -38%; }
+  }
+}
+
+@keyframes gallery-drift {
+  from { transform: translateY(var(--drift-from)); }
+  to { transform: translateY(var(--drift-to)); }
+}
+
 /* Architecture diagram: an edge traces itself from source to target when its list entry is pointed at. */
 .flow-trace {
   stroke-width: 2;
