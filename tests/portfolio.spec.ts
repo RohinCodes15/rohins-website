@@ -44,7 +44,7 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
 test("a case study shows its status, sections, and captioned figure", async ({ page }) => {
   await page.goto("/");
   const work = page.getByRole("region", { name: "Selected work" });
-  await expect(work.getByText("In development")).toHaveCount(2);
+  await expect(work.getByText("In development")).toHaveCount(3);
   await work.getByRole("link", { name: "AccessForge AI" }).click();
   await expect(page).toHaveURL(/\/work\/accessforge$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("AccessForge AI");

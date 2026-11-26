@@ -18,6 +18,14 @@ Updated November 26, 2026. The homepage and Phases 3–4 are implemented locally
 - Navigation and stack filters get 140 ms colour transitions. A hovered or focused nav link shows an ink square where the probe marker sits. Unpressed filters are `--text-2`.
 - Checks: lint, typecheck, 42 unit tests, build with secret scan, 33 smoke checks (axe included). Screenshots at 390 and 1440 px in both themes, plus overflow at 320, 1024 and 2560 px, all 0.
 
+## Audience and content audit (2026-11-26)
+
+- Added RiskLens Quant, Ledger, and Rotation Index as project pages (owner-approved). Every fact comes from the repository README, `gh` repository data, or dependency files checked 2026-11-26; no outcomes were added because none are published with a source.
+- Homepage order: work, stack, interests, then activity, so the activity fallback never leads. The hero now links Email, GitHub, and LinkedIn.
+- Refreshed the portfolio entry (public source link, repository facts, 66 unit tests, 59 smoke checks, 186.9 KiB).
+- Link audit: GitHub URLs and the RiskLens demo return 200. LinkedIn answers automated requests with 999, so it was not verified automatically.
+- Leadership, certifications, research write-ups, journal, and résumé stay hidden: no verified entries yet. The role line was kept at the owner's request.
+
 ## Motion pass (2026-11-26)
 
 - Signature: the probe-red square glides along the rail to the current section (`components/site/section-navigation.tsx`).
@@ -48,7 +56,7 @@ Updated November 26, 2026. The homepage and Phases 3–4 are implemented locally
 - Architecture diagrams on both case studies from typed `flows`; AccessForge repository facts checked with `gh` on 2026-11-25 (public, TypeScript, no license file, first commit 2026-11-11, last push 2026-11-25).
 - Contact publishes the email with a copy button (owner's choice) and adds LinkedIn (owner-supplied URL). The palette lists both.
 - Journal structure ready in `content/journal.ts`; `/journal` 404s and stays unlinked until the first entry. Layout checked with a labelled sample on `/showcase`.
-- Still waiting on content: leadership, certifications, résumé PDF (`site.resume`), journal articles, and the portfolio repository (it is not in git yet, so it has no repository facts).
+- Still waiting on content: leadership, certifications, résumé PDF (`site.resume`), and journal articles. The portfolio repository is public at RohinCodes15/rohins-website (2026-11-26).
 
 ## Command palette (2026-11-25)
 

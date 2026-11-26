@@ -24,25 +24,11 @@ export default function Home() {
   const technologies = Object.entries(stack).map(([id, entry]) => ({
     id, ...entry, usedIn: projectsByStack(projects, id as StackId).map(({ slug, title }) => ({ slug, title })),
   }));
-  // Work leads: it is the verified substance, and activity can render as its unavailable state.
+  // Work leads: it is the verified substance.
   const sections: { id: string; label: string; content: ReactNode }[] = [];
   if (featured.length) sections.push({
     id: "work", label: "Selected work", content: featured.map((project) => <ProjectCard key={project.slug} project={project} />),
   });
-  sections.push(
-    { id: "activity", label: "Activity", content: (
-      <Container>
-        <Suspense fallback={<ActivityFrame>
-          <div className="px-4 sm:px-6">
-            <p className="activity-loading text-text-2">Loading GitHub activity…</p>
-            <noscript><p><Link href={githubProfile.href} external>View activity on GitHub</Link></p></noscript>
-          </div>
-        </ActivityFrame>}>
-          <Activity />
-        </Suspense>
-      </Container>
-    ) },
-  );
 
   if (technologies.length) sections.push({
     id: "stack", label: "Technology stack", content: <Container><StackExplorer technologies={technologies} /></Container>,
@@ -64,6 +50,21 @@ export default function Home() {
       </ul>}
     </Container>,
   });
+  // Activity sits after work, stack and interests: its unavailable state should never be what a reviewer sees first.
+  sections.push(
+    { id: "activity", label: "Activity", content: (
+      <Container>
+        <Suspense fallback={<ActivityFrame>
+          <div className="px-4 sm:px-6">
+            <p className="activity-loading text-text-2">Loading GitHub activity…</p>
+            <noscript><p><Link href={githubProfile.href} external>View activity on GitHub</Link></p></noscript>
+          </div>
+        </ActivityFrame>}>
+          <Activity />
+        </Suspense>
+      </Container>
+    ) },
+  );
   if (journal.length) sections.push({ id: "journal", label: "Journal", content: <JournalList entries={journal.slice(0, 3)} more={journal.length > 3} /> });
   if (site.email || site.links.length || site.resume) sections.push({
     id: "contact", label: "Contact", content: <Contact email={site.email} links={site.links} resume={site.resume} />,
@@ -81,6 +82,10 @@ export default function Home() {
             {site.readout && <p className="grid-margin self-start border-t border-rule pt-2 font-mono text-meta text-text-2 lg:col-start-11 lg:row-start-2 lg:self-baseline lg:border-t-0 lg:pt-0">{site.readout}</p>}
             <div className="grid-main max-w-prose lg:row-start-3">
               <p className="text-text-2">{site.intro}</p>
+              <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+                {site.email && <Link href={`mailto:${site.email}`}>Email</Link>}
+                {site.links.map(({ label, href }) => <Link key={href} href={href} external>{label}</Link>)}
+              </p>
               {site.bio && <details className="mt-3">
                 <summary className="hover-underline cursor-pointer">Full introduction</summary>
                 <p className="mt-2 text-text-2">{site.bio}</p>

@@ -13,6 +13,13 @@ export const stack = {
   postgis: { label: "PostgreSQL + PostGIS", category: "Data" },
   networkx: { label: "NetworkX", category: "Analysis" },
   maplibre: { label: "MapLibre GL JS", category: "Interface" },
+  streamlit: { label: "Streamlit", category: "Interface" },
+  plotly: { label: "Plotly", category: "Interface" },
+  pandas: { label: "pandas", category: "Data" },
+  numpy: { label: "NumPy", category: "Analysis" },
+  scipy: { label: "SciPy", category: "Analysis" },
+  flask: { label: "Flask", category: "Framework" },
+  pygame: { label: "Pygame", category: "Interface" },
 } as const satisfies Record<string, StackEntry>;
 
 export type StackId = keyof typeof stack;
