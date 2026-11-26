@@ -42,7 +42,8 @@ export function CommandPaletteTrigger() {
         className="inline-flex min-h-6 cursor-pointer items-center gap-2 font-mono text-meta text-text-2 transition-colors duration-(--duration-micro) ease-out hover:text-text"
       >
         Search
-        {label && <kbd className="rounded-xs border border-rule-strong px-1 text-index">{label}</kbd>}
+        {/* Hidden on narrow screens: no keyboard shortcut there, and the late-arriving hint would wrap the row (layout shift). */}
+        {label && <kbd className="hidden rounded-xs border border-rule-strong px-1 text-index sm:inline">{label}</kbd>}
       </button>
       {session !== null && <CommandPalette key={session} onClose={() => setSession((current) => (current === session ? null : current))} />}
     </>

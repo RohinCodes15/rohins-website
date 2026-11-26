@@ -1,11 +1,11 @@
 # Portfolio handoff
 
-Updated November 26, 2026. The homepage and Phases 3–4 are implemented locally. The public activity section shows “GitHub activity unavailable” until a credential can retrieve verified data for `RohinCodes15`.
+Updated November 26, 2026, after the final visual acceptance audit. The site is feature-complete for launch content and passes every configured check locally and in GitHub Actions. It is **not deployed**: see Production readiness. Source: https://github.com/RohinCodes15/rohins-website (public, branch `main`).
 
 ## Implementation
 
 - `app/page.tsx`, `app/work/[slug]/page.tsx`, `components/site/section-navigation.tsx`, and `components/sections/stack-explorer.tsx` render the Datum homepage, section rail, keyboard accessible category filters, and the portfolio project detail. The rail wraps on mobile, tracks the current section, and retains the existing three-state theme toggle. Motion is tied to interaction and respects reduced motion.
-- `content/site.ts`, `content/stack.ts`, `content/projects.ts`, and the existing research and leadership registries own homepage copy and inventory. The portfolio itself is the first featured project, using its actual stack. Empty leadership and research inventories do not create placeholder achievements or write-ups. GitHub is the only supplied contact link.
+- `content/site.ts`, `content/stack.ts`, `content/projects.ts`, and the existing research and leadership registries own homepage copy and inventory. Five projects are featured: AccessForge AI, RiskLens Quant, Ledger, Rotation Index, and this portfolio. Empty leadership and research inventories do not create placeholder achievements or write-ups. Contact is email, GitHub, and LinkedIn, linked from both the hero and the Contact section.
 - `lib/github/activity.ts` and the existing GraphQL adapter use a fixed account, server-only credentials, strict validation, a three-second timeout, hourly freshness, and a 24-hour cap on last-good data. Vercel Runtime Cache stores validated results and cooldowns. Concurrent refreshes share one fetch per runtime instance. Rate limits and permission failures can suppress refresh or publication. Cache sharing across regions is best effort.
 - `components/sections/activity*.tsx` renders the HTML heatmap, date/count lists, real zero handling, derived statistics, and the unavailable state behind a Suspense boundary. With JavaScript disabled, the static shell links to the GitHub profile. Next.js needs its streaming script to reveal request-time HTML.
 - `components/kokonutui/activity-terrain.tsx` came from `shadcn@latest add @kokonutui/activity-terrain`. It retains its MIT notice and stock canvas projection. The adaptation removes demo values, uses semantic theme tokens and GitHub colour levels, and adds live reduced motion, Home/End, and a renderer failure callback. `components/terrain/terrain-activation.tsx` imports it after activation, with a 26-week mobile view. The HTML date/count view remains available throughout.
@@ -18,6 +18,21 @@ Updated November 26, 2026. The homepage and Phases 3–4 are implemented locally
 - Navigation and stack filters get 140 ms colour transitions. A hovered or focused nav link shows an ink square where the probe marker sits. Unpressed filters are `--text-2`.
 - Checks: lint, typecheck, 42 unit tests, build with secret scan, 33 smoke checks (axe included). Screenshots at 390 and 1440 px in both themes, plus overflow at 320, 1024 and 2560 px, all 0.
 
+## Visual acceptance audit (2026-11-26)
+
+Method: a Playwright sweep of 8 routes (`/`, five project pages, `/lab`, an unknown path) at 320, 390, 768, 1024, 1440, and 2560 px in light and dark: 96 renders. Each render checks horizontal overflow, elements extending past the viewport, cumulative layout shift (fail above 0.05), console errors, and axe (390 and 1440 px). Full-page screenshots were reviewed at 390 and 1440 px in both themes. Interactive checks ran in both themes at 390 and 1440 px: command palette search and Enter, lab sliders and resampling, the architecture diagram, and the motion checks (probe glide, stack filter reflow, press, View Transition, diagram trace) with and without reduced motion.
+
+Defects found and fixed:
+
+- **Layout shift at 320 px on project pages (CLS 0.052).** The search shortcut hint arrives after hydration and wrapped the theme switcher onto a new line. The hint is now hidden below 640 px, where there is no keyboard shortcut (`components/site/command-palette-trigger.tsx`).
+- **Overlapping arrowheads in the architecture diagram.** Two flows into one node shared one endpoint. `flowPorts` in `lib/diagram.ts` spreads each node's edge ends by the other end's position; unit test added.
+- **Command palette ranking.** Typing "risk" highlighted Research lab (matched on its hint) above RiskLens Quant (matched on its title), so Enter opened the wrong page. Groups with a title match now rank first; order within a group is unchanged (`lib/palette.ts`); unit test added.
+- **Inconsistent buttons.** `CopyButton` and the lab's New sample button duplicated `Button`'s classes and drifted from it. Both now use `Button`.
+
+After the fixes: 96 of 96 renders pass (no overflow, CLS ≤ 0.05, no axe violations, no console errors). Palette, lab, diagram, and motion checks pass in both themes and both motion modes.
+
+Not covered: Firefox and Safari (View Transitions and scroll timelines degrade to no animation there), physical devices, screen readers, and Lighthouse. Terrain was not exercised: it renders only with live activity data (B2).
+
 ## Audience and content audit (2026-11-26)
 
 - Added RiskLens Quant, Ledger, and Rotation Index as project pages (owner-approved). Every fact comes from the repository README, `gh` repository data, or dependency files checked 2026-11-26; no outcomes were added because none are published with a source.
@@ -29,9 +44,9 @@ Updated November 26, 2026. The homepage and Phases 3–4 are implemented locally
 ## Motion pass (2026-11-26)
 
 - Signature: the probe-red square glides along the rail to the current section (`components/site/section-navigation.tsx`).
-- Cross-document View Transitions between home and case studies; the project title carries over (`projectTransitionName` in `lib/content.ts`). CSS only.
+- Cross-document View Transitions between home and case studies; the project title carries over (`projectTitleTransition` in `lib/content.ts`). CSS only.
 - Section datum lines draw in on a CSS scroll timeline; transform only, no scroll hijacking.
-- Buttons, including `CopyButton` (now built on `Button`), dip on press via the `press` utility.
+- Buttons dip on press via the `press` utility. (`CopyButton` and the lab's New sample button were moved onto `Button` in the visual acceptance audit; before that they copied its classes.)
 - Stack filter rows reflow on Motion, loaded on intent so the cold homepage stays under budget (186.9 KiB of 200 KiB).
 - Architecture diagram: pointing at a flow entry traces its edge. Hover only by design: the SVG is decorative and hidden below 640 px, and the list carries the same information.
 - Reduced motion: glide, press, datum draw and view transitions all off. Verified in Chromium with Playwright in both motion modes, no console errors.
@@ -106,23 +121,24 @@ Checked and left unchanged:
 
 ## Verified locally
 
-Results from the final run on 2026-11-26, after the Phase 6 audit:
+Results from the final run on 2026-11-26, after the visual acceptance audit. The same steps also run in GitHub Actions (`.github/workflows/ci.yml`) on every push to `main`.
 
 | Check | Result |
 | --- | --- |
 | `npm run lint` | Pass, no warnings |
 | `npm run typecheck` | Pass |
-| `npm test` | 65 of 65 passed. Coverage 99.60% line, 97.04% branch, 97.75% function on `lib/` |
-| `npm run build` (postbuild secret scan) | Pass. 68 files scanned, no credentials. `/lab`, `/work/accessforge`, and `/work/portfolio` prerender statically; `/journal` prerenders as 404 while empty |
-| `npm run test:smoke` (Chromium desktop and Pixel 7, axe included) | 57 passed, 1 skipped by design (duplicate viewport sweep on mobile). The new lab check then passed on both projects (`tests/lab.spec.ts`, 8 of 8) |
+| `npm test` | 68 of 68 passed. Coverage 99.61% line, 96.88% branch, 98.08% function on `lib/` |
+| `npm run build` (postbuild secret scan) | Pass. 86 files scanned, no credentials. All five project pages and `/lab` prerender statically; `/journal` returns 404 while empty |
+| `npm run test:smoke` (Chromium desktop and Pixel 7, axe included) | 59 passed, 1 skipped by design (duplicate viewport sweep on mobile) |
 | `npm audit` | 0 vulnerabilities |
-| Initial JavaScript | Homepage 185.7 KiB, `/work/accessforge` 189.3 KiB, `/lab` 190.2 KiB (the palette itself loads on first open): gzip -9 of every script the HTML references. Under the 200 KiB budget. The earlier 144.8 KiB figure used an unrecorded method, so the two are not comparable |
+| Initial JavaScript | Homepage 186.9 KiB, `/work/accessforge` 190.4 KiB, `/lab` 191.3 KiB: gzip -9 of every script the HTML references. Under the 200 KiB budget |
+| Visual sweep | 96 of 96 renders pass (see Visual acceptance audit) |
 
-Not run: Lighthouse and field Web Vitals, Firefox and Safari, and manual screen-reader passes. The new lab browser check was not first run against the unfixed code.
+Not run: Lighthouse and field Web Vitals, Firefox and Safari, physical devices, and manual screen-reader passes.
 
 ## Remaining release gates
 
-- **B1, content:** Add approved leadership and certification entries (`content/leadership.ts`, `content/certifications.ts`; their sections stay hidden while empty), research write-ups, the RiskLens case study once its repository is available, a longer biography, and any additional contact links.
+- **B1, content:** Add approved leadership and certification entries (`content/leadership.ts`, `content/certifications.ts`; their sections stay hidden while empty), research write-ups, long-form case studies for RiskLens, Ledger, and Rotation Index (they have project pages, without case-study sections), a longer biography, and any additional contact links.
 - **B2, live data:** Set `GITHUB_CONTRIBUTIONS_TOKEN` as a least-privilege Vercel Production Secret and compare the resulting calendar with the signed-out public profile. No live statistics were fetched or claimed. Verify the hosted Runtime Cache in the target project.
 - **B4–B5, deployment:** Choose the canonical domain and verify Vercel, repository integration, preview protection, and hosted Actions. No deployment was performed.
 - **B6, terrain release:** Verify midrange Android frame pacing and physical iOS Safari, plus desktop and mobile screen-reader flows, before releasing live terrain. The HTML calendar remains the fallback. Field Web Vitals need production traffic.
@@ -130,5 +146,23 @@ Not run: Lighthouse and field Web Vitals, Firefox and Safari, and manual screen-
   - The first request for an unlisted `/work/` slug returns HTTP 200 with the not-found page; later requests return 404 (Cache Components).
   - `next dev` logs a React "script tag" warning on the not-found page, because the root layout re-renders on the client. `ThemeRestore` covers the theme.
   - The heatmap redesign has been checked only on synthetic fixtures until B2 supplies live data.
-  - Initial JavaScript leaves 14.3 KiB of headroom on the homepage and 9.8 KiB on `/lab`.
+  - Initial JavaScript leaves 13.1 KiB of headroom on the homepage and 8.7 KiB on `/lab`.
   - `tests/theme.spec.ts` "axe passes with Dark chosen on a light OS" failed once in a full run on 2026-11-25, then passed 3 times alone and in 2 further full runs. The cause was not found; watch it in CI.
+
+## Production readiness
+
+**Not ready to deploy.** The code is ready for review, and the content is ready except for the gaps in B1. Blocking before launch:
+
+1. B2: production GitHub credential, so Activity shows real data instead of its unavailable state.
+2. B4–B5: Vercel project, canonical domain, preview protection.
+3. Manual check that the LinkedIn link resolves (LinkedIn blocks automated requests).
+
+B1 (more content) and B6 (terrain on real devices) do not block a first launch: empty sections stay hidden, and terrain stays behind activation.
+
+## For the independent engineering audit
+
+- Start with `AGENTS.md`, then `docs/ARCHITECTURE.md` (decisions D1–D19) and this file.
+- Reproduce: `npm ci && npm run lint && npm run typecheck && npm test && npm run build && npm run test:smoke` (Node 24). No secrets are needed: without `GITHUB_CONTRIBUTIONS_TOKEN`, Activity renders its unavailable state.
+- Highest-risk areas to review: `lib/github/` (credential handling, validation, caching), `next.config.ts` (CSP with `'unsafe-inline'` for the theme script, §10), `scripts/check-secrets.mjs`, and `content/projects.ts` (every claim names its source).
+- Every published fact should trace to a repository README, `gh` data, or a dated command output recorded here. Flag any that do not.
+

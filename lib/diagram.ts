@@ -43,3 +43,23 @@ export function layoutFlows(flows: readonly Flow[], width: number): { nodes: Pla
   }
   return { nodes, rows: deepest + 1 };
 }
+
+/**
+ * Horizontal attachment points for each flow. A node with several edges on one side spreads them across
+ * `span`, ordered by the other end's x, so arrowheads never stack on one point and edges do not cross there.
+ */
+export function flowPorts(flows: readonly Flow[], nodes: readonly PlacedNode[], span: number): { x1: number; x2: number }[] {
+  const x = new Map(nodes.map((node) => [node.name, node.x]));
+  const spread = (end: "from" | "to", other: "from" | "to") => {
+    const offsets = new Map<number, number>();
+    for (const name of new Set(flows.map((flow) => flow[end]))) {
+      const edges = flows.map((flow, index) => ({ flow, index })).filter(({ flow }) => flow[end] === name)
+        .sort((a, b) => x.get(a.flow[other])! - x.get(b.flow[other])! || a.index - b.index);
+      edges.forEach(({ index }, rank) => offsets.set(index, ((rank + 1) / (edges.length + 1) - 0.5) * span));
+    }
+    return offsets;
+  };
+  const out = spread("from", "to");
+  const into = spread("to", "from");
+  return flows.map((flow, index) => ({ x1: x.get(flow.from)! + out.get(index)!, x2: x.get(flow.to)! + into.get(index)! }));
+}

@@ -1,4 +1,4 @@
-import { layoutFlows, type Flow } from "@/lib/diagram";
+import { flowPorts, layoutFlows, type Flow } from "@/lib/diagram";
 
 const WIDTH = 720;
 const NODE = { width: 188, height: 36 };
@@ -13,6 +13,7 @@ const ROW = 92;
  */
 export function ArchitectureDiagram({ flows, components }: { flows: readonly Flow[]; components: readonly string[] }) {
   const { nodes, rows } = layoutFlows(flows, WIDTH);
+  const ports = flowPorts(flows, nodes, NODE.width / 2);
   const at = new Map(nodes.map((node) => [node.name, { x: node.x, y: node.row * ROW + 8 }]));
   const height = rows * ROW - ROW + NODE.height + 16;
 
@@ -29,7 +30,7 @@ export function ArchitectureDiagram({ flows, components }: { flows: readonly Flo
           {flows.map(({ from, to }, index) => {
             const a = at.get(from)!;
             const b = at.get(to)!;
-            const [x1, y1, x2, y2] = [a.x, a.y + NODE.height, b.x, b.y - 2];
+            const [x1, y1, x2, y2] = [ports[index].x1, a.y + NODE.height, ports[index].x2, b.y - 2];
             return (
               <g key={`${from}-${to}`} data-edge={index + 1}>
                 <line x1={x1} y1={y1} x2={x2} y2={y2} className="stroke-text-2" markerEnd="url(#arrow)" />

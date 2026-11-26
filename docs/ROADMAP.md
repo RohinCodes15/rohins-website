@@ -1,6 +1,6 @@
 # Roadmap — Rohin Pidathala Portfolio
 
-Status: foundation and homepage implemented locally. Date: 2026-11-25. Architecture and decisions: [ARCHITECTURE.md](ARCHITECTURE.md). This roadmap supersedes the "Implementation roadmap" section in [TECHNICAL_RESEARCH.md](TECHNICAL_RESEARCH.md). It keeps that section's phase order and adds the visual work from [DESIGN_RESEARCH.md](DESIGN_RESEARCH.md).
+Status: launch content and features complete; final visual acceptance audit passed; awaiting independent engineering audit, then deployment gates B2 and B4–B5 (see [HANDOFF.md](HANDOFF.md), Production readiness). Not deployed. Date: 2026-11-26. Architecture and decisions: [ARCHITECTURE.md](ARCHITECTURE.md). This roadmap supersedes the "Implementation roadmap" section in [TECHNICAL_RESEARCH.md](TECHNICAL_RESEARCH.md). It keeps that section's phase order and adds the visual work from [DESIGN_RESEARCH.md](DESIGN_RESEARCH.md).
 
 Blockers (`B#`) and decisions (`D#`) refer to ARCHITECTURE §11–§12. A phase may start while a blocker is open only where the table says so.
 

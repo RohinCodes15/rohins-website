@@ -8,14 +8,20 @@ export interface PaletteItem {
   readonly keywords?: readonly string[];
 }
 
-/** Every query word must appear somewhere in the item's text. Order within a group is preserved. */
+/**
+ * Every query word must appear somewhere in the item's text. Groups holding a label match come first, so
+ * "risk" opens RiskLens rather than a page that only mentions risk in its hint. Order within a group is
+ * preserved, which keeps the result list grouped exactly as it renders.
+ */
 export function filterItems<T extends PaletteItem>(items: readonly T[], query: string): T[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return [...items];
-  return items.filter((item) => {
+  const hits = items.filter((item) => {
     const text = [item.label, item.hint ?? "", ...(item.keywords ?? [])].join(" ").toLowerCase();
     return words.every((word) => text.includes(word));
   });
+  const labelGroups = new Set(hits.filter(({ label }) => words.every((word) => label.toLowerCase().includes(word))).map(({ group }) => group));
+  return [...hits.filter(({ group }) => labelGroups.has(group)), ...hits.filter(({ group }) => !labelGroups.has(group))];
 }
 
 /** Arrow-key movement that wraps around the list. */

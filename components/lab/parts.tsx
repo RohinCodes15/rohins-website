@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 
 export const percent = (value: number, digits = 1) => `${(value * 100).toFixed(digits)}%`;
 export const fixed = (value: number, digits = 2) => value.toFixed(digits).replace("-", "−");
@@ -64,9 +65,7 @@ export function Controls({ children, seed, onResample }: { children: ReactNode; 
       <legend className="sr-only">Parameters</legend>
       {children}
       <div className="flex items-center justify-between gap-3 pt-1">
-        <button type="button" onClick={onResample} className="min-h-11 cursor-pointer rounded-sm border border-control px-3.5 text-body font-medium transition-colors duration-(--duration-micro) hover:border-signal active:bg-surface">
-          New sample
-        </button>
+        <Button onClick={onResample} className="cursor-pointer">New sample</Button>
         <span className="font-mono text-meta text-text-2 tabular-nums">seed {seed}</span>
       </div>
     </fieldset>

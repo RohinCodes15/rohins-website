@@ -18,6 +18,17 @@ test("every word must match label, hint, or keywords, ignoring case", () => {
   assert.deepEqual(filterItems(items, "dark portfolio"), []);
 });
 
+test("a group with a label match ranks above groups matching only on hints", () => {
+  const ranked: PaletteItem[] = [
+    { id: "lab", group: "Pages", label: "Research lab", hint: "Portfolio risk demonstrations" },
+    { id: "home", group: "Pages", label: "Home" },
+    { id: "a", group: "Projects", label: "AccessForge AI" },
+    { id: "risk", group: "Projects", label: "RiskLens Quant" },
+  ];
+  assert.deepEqual(filterItems(ranked, "risk").map(({ id }) => id), ["risk", "lab"]);
+  assert.deepEqual(filterItems(ranked, "research").map(({ id }) => id), ["lab"]);
+});
+
 test("moveIndex wraps in both directions and handles empty lists", () => {
   assert.equal(moveIndex(2, 1, 3), 0);
   assert.equal(moveIndex(0, -1, 3), 2);
