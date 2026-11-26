@@ -1,0 +1,110 @@
+import type { Project } from "../lib/types.ts";
+
+/**
+ * Display order. Add only approved, verified entries: every fact below traces to the project's own repository
+ * or documents, and every outcome names its source.
+ */
+export const projects: readonly Project[] = [
+  {
+    slug: "accessforge",
+    title: "AccessForge AI",
+    summary: "Maps pedestrian accessibility barriers and chooses the set of sidewalk repairs that opens the most accessible routes within a budget.",
+    role: "Personal project",
+    year: 2026,
+    status: "in-development",
+    statusNote: "Reporting, review, and the repair planner work locally. There is no community pilot or real-world outcome yet, and real repair costs, photos, and equity-targeted planning are not built.",
+    stack: ["nextjs", "typescript", "python", "fastapi", "postgis", "networkx", "maplibre", "playwright"],
+    outcomes: [
+      { label: "synthetic benchmark evaluations completed, no errors or timeouts", value: "410/410", source: "docs/engine/BENCHMARK_RESULTS.md, 2026-11-12. Synthetic grids, not real-world validation" },
+      { label: "engine tests passing", value: "155", source: "docs/engine/BENCHMARK_RESULTS.md, 2026-11-12, at 98.87% statement coverage" },
+    ],
+    links: [{ label: "Source on GitHub", href: "https://github.com/RohinCodes15/AccessForge" }],
+    featured: true,
+    caseStudy: {
+      problem: "A route is usable only if every piece of it is. Repair lists that rank barriers one at a time cannot see that two repairs may only be worth funding together, so a limited budget can be spent on fixes that open no complete route.",
+      solution: "Residents report barriers on a map that always has an equivalent list. Reviewers verify or reject each report, and every step is written to an append-only audit log. The planner scores candidate repairs as a group on the street network, compares four methods within a budget, and explains each choice. Every result is labeled as a modeled estimate, not an inspection or a compliance finding.",
+      figures: [
+        {
+          src: "/work/access-forge-overview.jpg",
+          width: 1440,
+          height: 870,
+          alt: "AccessForge overview page: the headline “Fix the barriers that reconnect the most routes”, a map of Fremont, and filters for places people travel to.",
+          caption: "Overview page, captured from a local development build. The API was not running, so the place counts read 0.",
+        },
+      ],
+      architecture: [
+        { name: "apps/web", detail: "Next.js and TypeScript. MapLibre maps, each paired with a list that shares the same query." },
+        { name: "services/api", detail: "FastAPI with Pydantic validation at the boundary, SQLAlchemy and GeoAlchemy2 repositories, and a worker that claims jobs from a Postgres table." },
+        { name: "PostgreSQL + PostGIS", detail: "Street network, barriers, repairs, scenarios, jobs, and the audit log." },
+        { name: "services/engine", detail: "A pure Python package with no web, database, or network I/O: graph model, access metric, and optimizers on NetworkX." },
+        { name: "pipelines/ingest", detail: "Loads OpenStreetMap, Census, and CDC PLACES data for the Fremont pilot area." },
+      ],
+      complexity: [
+        "Access is scored as cumulative opportunities: Dijkstra runs per origin and mobility profile over a generalized-distance graph and counts destinations within a threshold.",
+        "Uncertain barriers are sampled as independent Bernoulli scenarios from an explicit seed, so the same input always produces the same selection.",
+        "Exhaustive search over up to 20 repair candidates is the correctness reference. Larger inputs are refused rather than silently handed to a heuristic.",
+        "On a constructed two-repair corridor, the greedy gain-per-cost baseline gains 0 while exhaustive search funds the pair and adds 10 modeled opportunities. This is a planted example, not a population result.",
+      ],
+      decisions: [
+        { decision: "Keep the engine a pure library", reason: "Plain data in and out makes the optimizers testable on their own and lets storage change without touching algorithms." },
+        { decision: "Queue jobs in Postgres", reason: "SELECT … FOR UPDATE SKIP LOCKED avoids running Redis or Celery until measured load needs them." },
+        { decision: "Use MapLibre GL JS", reason: "It is open source under BSD-3, which avoids proprietary map SDK terms." },
+        { decision: "Pair every map with a list", reason: "The app targets WCAG 2.2 AA, so nothing is available only on the map." },
+        { decision: "Publish null results", reason: "The benchmark reports the 52 of 60 low-budget cases where no baseline gained anything, instead of only the favorable ones." },
+      ],
+      flows: [
+        { from: "Browser", to: "apps/web", label: "pages and maps" },
+        { from: "apps/web", to: "services/api", label: "typed JSON over HTTPS" },
+        { from: "services/api", to: "PostgreSQL + PostGIS", label: "SQL" },
+        { from: "services/api", to: "services/engine", label: "worker imports" },
+        { from: "pipelines/ingest", to: "PostgreSQL + PostGIS", label: "loads pilot data" },
+      ],
+    },
+    repository: { url: "https://github.com/RohinCodes15/AccessForge", visibility: "public", language: "TypeScript", firstCommit: "2026-11-11", lastPush: "2026-11-25", checked: "2026-11-25" },
+  },
+  {
+    slug: "portfolio",
+    title: "Developer portfolio",
+    summary: "An editorial portfolio with a server-rendered GitHub activity calendar and an optional interactive terrain.",
+    role: "Personal project",
+    year: 2026,
+    status: "in-development",
+    statusNote: "Built and tested locally. It is not deployed yet, and live GitHub data waits on a production credential.",
+    stack: ["nextjs", "react", "typescript", "tailwind", "motion", "playwright"],
+    outcomes: [
+      { label: "unit and integration tests passing", value: "65", source: "npm test, 2026-11-25" },
+      { label: "browser checks passing, axe included", value: "57", source: "npm run test:smoke, 2026-11-25" },
+      { label: "KiB of initial JavaScript, gzip", value: "185.7", source: "gzip -9 of every script the homepage HTML references, local production build, 2026-11-25, against a 200 KiB budget" },
+    ],
+    links: [],
+    featured: true,
+    caseStudy: {
+      problem: "Show engineering work, including real GitHub activity, without placeholder content or claims a reader cannot check.",
+      solution: "A Next.js site on a left-anchored editorial grid. Content lives in typed registries, so a section without approved entries is left out instead of stubbed. GitHub contribution data is fetched on the server, validated, and cached. When it cannot be verified, the page says so.",
+      figures: [],
+      architecture: [
+        { name: "app/", detail: "Routes, metadata, and the design tokens in one stylesheet." },
+        { name: "content/", detail: "Typed registries for projects, stack, and site copy." },
+        { name: "lib/github/", detail: "Server-only fetching, response validation, and cache policy for the contribution calendar." },
+        { name: "components/terrain/", detail: "An optional 3D activity view, loaded only after the reader activates it." },
+      ],
+      complexity: [
+        "The contribution calendar is fetched on the server with a three-second timeout, hourly freshness, and a 24-hour cap on last-good data.",
+        "Concurrent refreshes share one upstream request per runtime instance, and rate limits or permission failures can suppress refresh or publication.",
+        "The three-state theme is set by an inline script before first paint, so there is no flash and no dependency.",
+        "A post-build scan checks static output and prerendered HTML for token patterns, so a leaked credential fails the build.",
+      ],
+      decisions: [
+        { decision: "No committed data snapshot", reason: "A stale snapshot would misrepresent current activity, so missing data shows an unavailable state." },
+        { decision: "Typed JSX instead of MDX", reason: "Editorial components work directly in JSX. MDX is revisited once three long-form case studies exist." },
+        { decision: "Commit Mono for numbers", reason: "Switzer has no tabular figures, so dates, counts, and readouts use a monospaced face to align." },
+      ],
+      flows: [
+        { from: "content/", to: "app/", label: "typed registries" },
+        { from: "lib/github/", to: "app/", label: "validated, cached calendar" },
+        { from: "GitHub GraphQL API", to: "lib/github/", label: "server-only request" },
+        { from: "app/", to: "components/terrain/", label: "loads after activation" },
+      ],
+    },
+  },
+];

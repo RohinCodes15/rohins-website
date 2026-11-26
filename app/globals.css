@@ -1,0 +1,471 @@
+/* Design tokens: docs/DESIGN_SYSTEM.md §2–§7. Components use these through Tailwind utilities only. */
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+
+/* Themes (docs/ARCHITECTURE.md §9, D3). <html data-theme> is "system", "light" or "dark", set before first
+   paint by THEME_SCRIPT (lib/theme.ts). No attribute (JavaScript off) behaves as "system". */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"], [data-theme="dark"]), :root:not([data-theme="light"], [data-theme="dark"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* ---------- Raw palette: light-dark(light, dark), resolved by color-scheme ---------- */
+:root {
+  color-scheme: light dark;
+
+  --bg: light-dark(#fafafa, #0a0a0b);
+  --surface: light-dark(#ffffff, #141417);
+  --text: light-dark(#0a0a0b, #ededf0);
+  --text-2: light-dark(#52525b, #a1a1aa);
+  --text-3: #71717a;
+  --rule: light-dark(rgb(10 10 11 / 0.1), rgb(237 237 240 / 0.1));
+  --rule-strong: light-dark(rgb(10 10 11 / 0.18), rgb(237 237 240 / 0.18));
+  --control: light-dark(#8a8a93, #71717a);
+  --signal: light-dark(#0047ff, #5b8cff);
+  --signal-fill: light-dark(#0047ff, #2f6bff);
+  --probe: light-dark(#c8102e, #ff4d6d);
+  --probe-mark: light-dark(#c8102e, #dc143c);
+  --on-probe: #ffffff;
+
+  --terrain-0: light-dark(#eeeef0, #17181c);
+  --terrain-1: light-dark(#c9d8ff, #172447);
+  --terrain-2: light-dark(#8aaeff, #1d3c8f);
+  --terrain-3: #2f6bff;
+  --terrain-4: light-dark(#0a2a8a, #a9c4ff);
+  --terrain-accent: light-dark(#c8102e, #ff4d6d);
+  --terrain-text: light-dark(#52525b, #a1a1aa);
+
+  /* Grid (DESIGN_SYSTEM §4.1), mobile first */
+  --grid-columns: 4;
+  --grid-gutter: 1rem;
+  --grid-margin: 1.25rem;
+
+  /* Motion (DESIGN_SYSTEM §7) */
+  --duration-micro: 140ms;
+  --duration-ui: 240ms;
+  /* A damped spring (ratio 0.78) sampled into linear(): 2% overshoot, settled in about 305 ms.
+     Regenerate the points if the feel changes; Motion's SPRINGS.layout is the JavaScript twin. */
+  --duration-spring: 320ms;
+  --ease-spring: linear(0, 0.054, 0.177, 0.329, 0.481, 0.619, 0.735, 0.827, 0.897, 0.946, 0.98, 1.001, 1.013, 1.019, 1.02, 1.019, 1.016, 1.013, 1.01, 1.007, 1.005, 1.003, 1);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@media (width >= 40rem) {
+  :root {
+    --grid-columns: 8;
+    --grid-gutter: 1.25rem;
+    --grid-margin: 2rem;
+  }
+}
+
+@media (width >= 64rem) {
+  :root {
+    --grid-columns: 12;
+    --grid-gutter: 1.5rem;
+    --grid-margin: clamp(2rem, 5vw, 4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-micro: 0ms;
+    --duration-ui: 0ms;
+    --duration-spring: 0ms;
+  }
+}
+
+/* ---------- Tailwind theme: defaults removed so only tokens exist ---------- */
+@theme {
+  --color-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --radius-*: initial;
+  --text-*: initial;
+  --breakpoint-*: initial;
+
+  /* Breakpoints: DESIGN_SYSTEM §4.1 */
+  --breakpoint-sm: 40rem; /* 640px */
+  --breakpoint-lg: 64rem; /* 1024px */
+  --breakpoint-xl: 80rem; /* 1280px */
+
+  /* Spacing: 4px base (p-1 = 4px … p-48 = 192px) plus section rhythm */
+  --spacing: 0.25rem;
+  --spacing-section: 6rem;
+  --spacing-section-sm: 4rem;
+  --container-page: 82.5rem; /* 1320px */
+  /* Prose measure: about 60–72 characters of Switzer at any size. Use max-w-prose on running text. */
+  --container-prose: 66ch;
+
+  /* Borders: 2px maximum radius, no shadows (DESIGN_SYSTEM §6) */
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+
+  /* Type scale: DESIGN_SYSTEM §3.2. Fluid steps use rem + vw so text still scales with browser zoom (WCAG 1.4.4). */
+  --text-display: clamp(2.75rem, 0.5rem + 8vw, 8rem);
+  --text-display--line-height: 0.9;
+  --text-display--letter-spacing: -0.04em;
+  --text-display--font-weight: 560;
+  --text-h1: clamp(2rem, 1.25rem + 2.5vw, 3rem);
+  --text-h1--line-height: 1.05;
+  --text-h1--letter-spacing: -0.03em;
+  --text-h1--font-weight: 560;
+  --text-h2: clamp(1.5rem, 1.25rem + 1vw, 1.75rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 540;
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.3;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 540;
+  --text-lead: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+  --text-lead--line-height: 1.5;
+  --text-lead--letter-spacing: -0.005em;
+  --text-lead--font-weight: 420;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  --text-index: 0.75rem;
+  --text-index--line-height: 1;
+  --text-index--letter-spacing: 0.02em;
+  --text-metric: clamp(2rem, 1.25rem + 2.5vw, 3rem);
+  --text-metric--line-height: 1;
+  --text-metric--letter-spacing: -0.03em;
+  --text-metric--font-weight: 500;
+
+  --ease-datum: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@theme inline {
+  /* next/font sets --font-switzer and --font-commit-mono once the files land; system stacks until then. */
+  --font-sans: var(--font-switzer, ui-sans-serif), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-commit-mono, ui-monospace), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-heading: var(--font-sans);
+
+  /* Semantic colours (DESIGN_SYSTEM §2.2) */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-control: var(--control);
+  --color-signal: var(--signal);
+  --color-signal-fill: var(--signal-fill);
+  --color-probe: var(--probe);
+  --color-probe-mark: var(--probe-mark);
+  --color-on-probe: var(--on-probe);
+  --color-terrain-0: var(--terrain-0);
+  --color-terrain-1: var(--terrain-1);
+  --color-terrain-2: var(--terrain-2);
+  --color-terrain-3: var(--terrain-3);
+  --color-terrain-4: var(--terrain-4);
+  --color-terrain-accent: var(--terrain-accent);
+
+  /* shadcn names, mapped so primitives inherit the brand (DESIGN_SYSTEM §2.2) */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--text);
+  --color-primary-foreground: var(--bg);
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--surface);
+  --color-muted-foreground: var(--text-2);
+  --color-accent: var(--surface);
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--probe);
+  --color-border: var(--rule);
+  --color-input: var(--control);
+  --color-ring: var(--signal);
+}
+
+/* ---------- Layout utility: the asymmetric page grid (DESIGN_SYSTEM §4) ---------- */
+@utility grid-page {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  padding-inline: var(--grid-margin);
+  inline-size: min(100%, var(--container-page) + 2 * var(--grid-margin));
+  overflow-wrap: anywhere;
+}
+
+@utility grid-rail {
+  grid-column: 1 / -1;
+
+  @variant lg {
+    grid-column: 1 / 4;
+  }
+}
+
+@utility grid-main {
+  grid-column: 1 / -1;
+
+  @variant lg {
+    grid-column: 4 / 11;
+  }
+}
+
+@utility grid-margin {
+  grid-column: 1 / -1;
+
+  @variant lg {
+    grid-column: 11 / -1;
+  }
+}
+
+@utility grid-figure {
+  grid-column: 1 / -1;
+
+  @variant lg {
+    grid-column: 4 / -1;
+  }
+}
+
+@utility section-heading {
+  position: relative;
+  padding-block-start: var(--spacing-section-sm);
+  padding-block-end: calc(var(--spacing) * 3 + 1px);
+  margin-block-end: calc(var(--spacing) * 8);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 1px;
+    background: var(--rule);
+  }
+
+  @variant lg {
+    padding-block-start: var(--spacing-section);
+
+    &::after {
+      inset-inline-start: var(--grid-margin);
+    }
+  }
+}
+
+/* The display name sits on the first datum line (DESIGN_SYSTEM §5.1): from its column to the viewport's right
+   edge on desktop, edge to edge below lg. Border-image outset is ink overflow, so it never adds scroll width. */
+@utility hero-datum {
+  border-block-end: 1px solid var(--rule);
+  border-image: linear-gradient(var(--rule) 0 0) 0 0 1 0 / 0 0 1px 0 / 0 100vw 0 100vw;
+
+  @variant lg {
+    border-image-outset: 0 100vw 0 0;
+  }
+}
+
+/* Command palette: a short drop-in when it opens (a response to the reader's action). Reduced motion zeroes it. */
+@utility palette-dialog {
+  transition: opacity var(--duration-micro) ease-out, translate var(--duration-ui) var(--ease-datum);
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 -0.5rem;
+  }
+
+  &::backdrop {
+    background: color-mix(in srgb, var(--text) 24%, transparent);
+  }
+}
+
+/* ---------- Hover primitives: CSS only, no client JavaScript (DESIGN_SYSTEM §7) ----------
+   Put `group` on the interactive element. Tailwind's hover variant applies only on devices that can
+   hover, so touch taps never leave a stuck state. Keyboard focus gets the same feedback.
+   Reduced motion turns these into instant changes (base layer below). */
+@utility hover-nudge {
+  transition: transform var(--duration-micro) ease-out;
+
+  @variant group-hover {
+    transform: translate(2px, -2px);
+  }
+  @variant group-focus-visible {
+    transform: translate(2px, -2px);
+  }
+}
+
+/* A --signal line drawn from the left: place on an absolutely positioned 1px overlay. */
+@utility hover-datum {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-ui) var(--ease-datum);
+
+  @variant group-hover {
+    transform: scaleX(1);
+  }
+  @variant group-focus-visible {
+    transform: scaleX(1);
+  }
+}
+
+@utility hover-underline {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--rule-strong);
+  transition: text-decoration-color var(--duration-micro) ease-out;
+
+  @variant hover {
+    text-decoration-color: currentColor;
+  }
+  &:focus-visible {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Press feedback: the control dips on press and springs back on release. */
+@utility press {
+  transition:
+    transform var(--duration-spring) var(--ease-spring),
+    color var(--duration-micro) ease-out,
+    background-color var(--duration-micro) ease-out,
+    border-color var(--duration-micro) ease-out;
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+      transition-duration: 60ms;
+    }
+  }
+}
+
+/* ---------- Scroll and navigation motion (DESIGN_SYSTEM §7, revised 2026-11-26) ----------
+   Datum lines draw in from the left as their section reaches the reader, and the heading settles onto
+   its line. Only transform moves, so text is never hidden, and browsers without scroll timelines or with
+   reduced motion show the final state. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .section-heading::after {
+      transform-origin: left;
+      animation: datum-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 35%;
+    }
+
+    .section-heading > * {
+      animation: datum-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 30%;
+    }
+  }
+
+  /* Page transitions between home and case studies: the project title carries over (view-transition-name
+     set inline on both pages), and the rest of the page cross-fades briefly. */
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+  }
+
+  ::view-transition-group(*) {
+    animation-duration: var(--duration-spring);
+    animation-timing-function: var(--ease-spring);
+  }
+}
+
+/* Architecture diagram: an edge traces itself from source to target when its list entry is pointed at. */
+.flow-trace {
+  stroke-width: 2;
+  stroke-dashoffset: var(--trace, 1);
+  transition: stroke-dashoffset var(--duration-spring) var(--ease-spring);
+}
+
+@keyframes datum-draw {
+  from { transform: scaleX(0); }
+}
+
+@keyframes datum-settle {
+  from { transform: translateY(0.5rem); }
+}
+
+/* ---------- Base ---------- */
+@utility motion-surface {
+  @media (prefers-reduced-motion: reduce) {
+    /* Override inline values from any spring already in progress. */
+    opacity: 1 !important;
+    transform: none !important;
+
+    &[data-motion-exiting] {
+      display: none !important;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-rule;
+  }
+
+  html {
+    @apply bg-bg font-sans text-body text-text;
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    @apply bg-probe-mark text-on-probe;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+html:not([data-theme]) :is(.stack-filters, .terrain-activation) {
+  display: none;
+}
+
+html:not([data-theme]) .activity-loading {
+  display: none;
+}
