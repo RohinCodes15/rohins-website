@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SiteFooter } from "@/components/site/site-footer";
 import { ThemeRestore } from "@/components/site/theme-restore";
 import { site } from "@/content/site";
 import { THEME_SCRIPT } from "@/lib/theme";
@@ -17,7 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body>{children}<ThemeRestore /></body>
+      <body>{children}<SiteFooter /><ThemeRestore /></body>
     </html>
   );
 }

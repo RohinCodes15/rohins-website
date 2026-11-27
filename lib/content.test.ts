@@ -106,3 +106,17 @@ test("featured stack logos exist and reference known stack entries", async () =>
     if (stackId) assert.ok(stackId in stack, `${label}: unknown stack id ${stackId}`);
   }
 });
+
+test("the stack inventory keeps every owner-confirmed technology", async () => {
+  const { stack } = await import("../content/stack.ts");
+  const labels = new Set<string>(Object.values(stack).map(({ label }) => label));
+  const confirmed = [
+    "Python", "JavaScript", "C++", "CSS", "HTML", "TypeScript", "Java",
+    "Expo", "Motion", "Next.js", "React Native", "React", "FastAPI", "Node.js",
+    "MongoDB", "Supabase", "PostgreSQL",
+    "pandas", "PyTorch", "Claude API", "Hugging Face", "Monte Carlo simulation", "Statistical modeling", "OpenAI API", "scikit-learn", "NumPy",
+    "Git", "GitHub Actions", "Vercel", "Google Cloud", "Figma", "VS Code", "GitHub", "Arduino",
+  ];
+  assert.equal(confirmed.length, 34);
+  assert.deepEqual(confirmed.filter((label) => !labels.has(label)), []);
+});

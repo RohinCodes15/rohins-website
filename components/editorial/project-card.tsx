@@ -39,7 +39,7 @@ export function ProjectStack({ items }: { items: readonly { project: Project; co
 export function ProjectCard({ project, cover }: { project: Project; cover?: ProjectCover }) {
   return (
     <article className="project-panel group/project relative grid gap-6 rounded-sm border border-rule bg-surface p-5 sm:p-6 lg:grid-cols-12 lg:gap-8 lg:p-8">
-      <div className={cover ? "lg:col-span-5" : "lg:col-span-12"}>
+      <div className="lg:col-span-5">
         <div className="flex items-baseline justify-between gap-4">
           <h3 style={{ viewTransitionName: projectTitleTransition(project.slug) }} className="text-h2 wrap-anywhere">
             <Link
@@ -62,7 +62,7 @@ export function ProjectCard({ project, cover }: { project: Project; cover?: Proj
         </p>
         <p aria-hidden="true" className="mt-6 font-mono text-meta text-text-2 transition-colors duration-(--duration-ui) group-hover/project:text-signal group-focus-within/project:text-signal">Read case study</p>
       </div>
-      {cover && (
+      {cover ? (
         <div className="overflow-hidden rounded-sm border border-rule bg-[light-dark(#f4f4f5,#18181b)] lg:col-span-7">
           <Image
             src={cover.src}
@@ -74,6 +74,11 @@ export function ProjectCard({ project, cover }: { project: Project; cover?: Proj
             className="aspect-[16/10] h-auto w-full object-contain"
           />
         </div>
+      ) : (
+        // No real screen yet: the project's own status note fills the frame, set large, instead of an empty box.
+        <p className="self-end border-t border-rule pt-5 text-h3 text-balance text-text-2 lg:col-span-6 lg:col-start-7 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
+          {project.statusNote}
+        </p>
       )}
     </article>
   );

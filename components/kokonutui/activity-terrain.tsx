@@ -366,9 +366,10 @@ export default function ActivityTerrain({
     const lift = clamp(s.pitch / PITCH_TERRAIN, 0, 1.2);
     // Fit the whole board, at its current turn and tilt, into the canvas.
     const w = weeks;
+    // The board starts 1.25 rows early so the month labels drawn above it (at -0.75) stay inside the canvas.
     const corners = [
-      [0, 0],
-      [w, 0],
+      [0, -1.25],
+      [w, -1.25],
       [0, DAYS],
       [w, DAYS],
     ];

@@ -15,7 +15,7 @@ test("the production homepage exposes the portfolio heading without JavaScript",
     await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveText("Rohin Pidathala");
     await expect(page).toHaveTitle(/Rohin Pidathala/);
     await expect(page.getByRole("link", { name: /View activity on GitHub/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Language" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Languages" })).toBeHidden();
     // The stack inventory rows render without JavaScript (the featured logo row also names TypeScript).
     await expect(page.getByText("TypeScript", { exact: true }).last()).toBeVisible();
     // The theme toggle needs JavaScript, so it stays hidden (keeping its space) and the OS theme applies.
@@ -119,7 +119,7 @@ test("featured projects stack as pinned panels on wide screens and stay a plain 
   const items = page.locator(".project-stack-item");
   await expect(items).toHaveCount(5);
   await expect(items.first()).toHaveCSS("position", "sticky");
-  await expect(page.getByRole("region", { name: "Selected work" }).getByRole("img")).toHaveCount(3);
+  await expect(page.getByRole("region", { name: "Selected work" }).getByRole("img")).toHaveCount(4);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(items.first()).toHaveCSS("position", "static");
 });

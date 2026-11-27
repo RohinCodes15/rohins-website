@@ -17,7 +17,8 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  // Only on Vercel, which serves HTTPS. Safari applies it to a local `next start` over HTTP too and breaks every asset.
+  ...(process.env.VERCEL ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [

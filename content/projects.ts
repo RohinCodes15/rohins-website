@@ -13,7 +13,7 @@ export const projects: readonly Project[] = [
     year: 2026,
     status: "in-development",
     statusNote: "Reporting, review, and the repair planner work locally. There is no community pilot or real-world outcome yet, and real repair costs, photos, and equity-targeted planning are not built.",
-    stack: ["nextjs", "typescript", "python", "fastapi", "postgis", "networkx", "maplibre", "playwright"],
+    stack: ["nextjs", "typescript", "python", "fastapi", "postgresql", "postgis", "networkx", "maplibre", "playwright"],
     outcomes: [
       { label: "synthetic benchmark evaluations completed, no errors or timeouts", value: "410/410", source: "docs/engine/BENCHMARK_RESULTS.md, 2026-11-12. Synthetic grids, not real-world validation" },
       { label: "engine tests passing", value: "155", source: "docs/engine/BENCHMARK_RESULTS.md, 2026-11-12, at 98.87% statement coverage" },
@@ -131,8 +131,8 @@ export const projects: readonly Project[] = [
     statusNote: "Built, tested, and public on GitHub. It is not deployed yet, and live GitHub data waits on a production credential.",
     stack: ["nextjs", "react", "typescript", "tailwind", "motion", "playwright"],
     outcomes: [
-      { label: "unit and integration tests passing", value: "66", source: "npm test, 2026-11-26" },
-      { label: "browser checks passing, axe included", value: "59", source: "npm run test:smoke, 2026-11-26, 1 skipped" },
+      { label: "unit and integration tests passing", value: "76", source: "npm test, 2026-11-26" },
+      { label: "browser checks passing, axe included", value: "73", source: "npm run test:smoke, 2026-11-26, 3 skipped by design" },
       { label: "KiB of initial JavaScript, gzip", value: "186.9", source: "gzip -9 of every script the homepage HTML references, local production build, 2026-11-26, against a 200 KiB budget" },
     ],
     links: [{ label: "Source on GitHub", href: "https://github.com/RohinCodes15/rohins-website" }],
@@ -140,7 +140,15 @@ export const projects: readonly Project[] = [
     caseStudy: {
       problem: "Show engineering work, including real GitHub activity, without placeholder content or claims a reader cannot check.",
       solution: "A Next.js site on a left-anchored editorial grid. Content lives in typed registries, so a section without approved entries is left out instead of stubbed. GitHub contribution data is fetched on the server, validated, and cached. When it cannot be verified, the page says so.",
-      figures: [],
+      figures: [
+        {
+          src: "/work/portfolio/home.jpg",
+          width: 1440,
+          height: 900,
+          alt: "Portfolio homepage in the dark theme: the name Rohin Pidathala, the role line, contact links, the section rail, and the three identity lines Software Developer, AI Engineer, and Quantitative Research.",
+          caption: "Homepage, captured at 1440 × 900 px from a local production build on 2026-11-26, dark theme, reduced motion.",
+        },
+      ],
       architecture: [
         { name: "app/", detail: "Routes, metadata, and the design tokens in one stylesheet." },
         { name: "content/", detail: "Typed registries for projects, stack, and site copy." },

@@ -22,17 +22,17 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
   await expect(page).toHaveURL(/#stack$/);
   await expect(stackLink).toHaveAttribute("aria-current", "location");
 
-  const language = page.getByRole("button", { name: "Language" });
+  const language = page.getByRole("button", { name: "Languages" });
   await language.focus();
   await page.keyboard.press("Space");
   await expect(language).toHaveAttribute("aria-pressed", "true");
   const stack = page.getByRole("region", { name: "Tech Stack" });
   // The inventory is the region's last list; the first is the featured logo row.
   const rows = stack.getByRole("list").last().getByRole("listitem");
-  await expect(rows).toHaveCount(2);
+  await expect(rows).toHaveCount(7);
   await expect(rows.filter({ hasText: "TypeScript" })).toHaveCount(1);
   await expect(rows.filter({ hasText: "Python" })).toHaveCount(1);
-  await expect(stack.getByRole("status")).toHaveText("2 technologies shown");
+  await expect(stack.getByRole("status")).toHaveText("7 technologies shown");
 
   // Stack rows also link to projects, so check that link and then follow the Selected work row.
   await expect(stack.getByRole("link", { name: "AccessForge AI" }).first()).toHaveAttribute("href", "/work/accessforge");
@@ -117,5 +117,6 @@ test("case studies show reading progress once reading starts; the homepage has n
   await page.keyboard.press("ArrowLeft");
   expect((await progress.boundingBox())?.x).toBeLessThan(corner?.x ?? 0);
   await page.keyboard.press("Home");
-  await expect.poll(async () => (await progress.boundingBox())?.x).toBe(corner?.x);
+  // Within half a pixel: WebKit reports layout positions with subpixel remainders.
+  await expect.poll(async () => (await progress.boundingBox())?.x).toBeCloseTo(corner?.x ?? 0, 0);
 });

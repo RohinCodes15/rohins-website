@@ -18,6 +18,21 @@ Updated November 26, 2026, after the final visual acceptance audit. The site is 
 - Navigation and stack filters get 140 ms colour transitions. A hovered or focused nav link shows an ink square where the probe marker sits. Unpressed filters are `--text-2`.
 - Checks: lint, typecheck, 42 unit tests, build with secret scan, 33 smoke checks (axe included). Screenshots at 390 and 1440 px in both themes, plus overflow at 320, 1024 and 2560 px, all 0.
 
+## Inventory, footer, deterministic activity tests (2026-11-26)
+
+- `content/stack.ts`: the 34 owner-confirmed technologies plus the 10 project-referenced ones (44), in five filters. `components/site/site-footer.tsx` is in `app/layout.tsx`. The portfolio has a real homepage figure, which is also its stack cover. The Rotation Index panel sets its status note large in place of a screen.
+- Fixed:
+  - Footer overflow at 320 px.
+  - Clipped 2D month labels in the terrain (`activity-terrain.tsx` fit).
+  - Missing favicon (`app/icon.svg`).
+  - WebKit failing to load any asset from a local production build: `upgrade-insecure-requests` is now sent only on Vercel (`next.config.ts`).
+- Tests:
+  - The suite blanks the GitHub token.
+  - `tests/activity-states.spec.ts` covers the success states on the dev showcase. Outside CI it reuses a running `next dev` on port 3000.
+  - The stack test follows `CSS.supports`.
+- Checks: lint, typecheck, 76 unit, build with secret scan, Chromium 73 passed and 3 skipped, WebKit 35 passed with 2 harness or engine failures, Firefox blocked (does not launch), 0 audit vulnerabilities, Lighthouse accessibility 100.
+- Details: [FINAL_AUDIT.md](FINAL_AUDIT.md).
+
 ## Featured project stack (2026-11-26)
 
 - Added Skiper 16 (card stack scroll) in place of the Selected work rows. The files are `components/editorial/project-card.tsx` (`ProjectStack`) and `.project-stack` in `app/globals.css`. It is a CSS scroll timeline with no new dependency and no Skiper code.

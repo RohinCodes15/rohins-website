@@ -49,8 +49,10 @@ export default function Home() {
   // Work leads: it is the verified substance.
   const sections: { id: string; label: string; content: ReactNode; centered?: boolean }[] = [];
   if (featured.length) sections.push({
-    // Each panel's cover is the project's first real screen in the closer-look set; projects without one get none.
-    id: "work", label: "Selected work", content: <ProjectStack items={featured.map((project) => ({ project, cover: closerLook.find((screen) => screen.project === project.slug) }))} />,
+    // Each panel's cover is the project's first real screen (closer-look set, then case-study figure); projects without one get none.
+    id: "work", label: "Selected work", content: <ProjectStack items={featured.map((project) => ({
+      project, cover: closerLook.find((screen) => screen.project === project.slug) ?? project.caseStudy?.figures[0],
+    }))} />,
   });
   // Phone-shaped screens show their top 4:5 so no single screen fills a column.
   const screens = closerLook.map(({ project, ...image }) => ({
