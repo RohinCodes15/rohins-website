@@ -1,7 +1,7 @@
 import { Fragment, type CSSProperties } from "react";
 import { activityMonths, activityStats, formatActivityDate, monthColumns } from "@/lib/github/calendar";
 import type { ContributionCalendar } from "@/lib/github/validate";
-import { TerrainActivation } from "@/components/terrain/terrain-activation";
+import { TerrainView } from "@/components/terrain/terrain-activation";
 
 const levels = ["bg-terrain-0", "bg-terrain-1", "bg-terrain-2", "bg-terrain-3", "bg-terrain-4"];
 
@@ -34,9 +34,10 @@ export function ActivityGrid({ calendar }: { calendar: ContributionCalendar }) {
         <p className="mt-4 font-mono text-meta text-text-2 tabular-nums">
           <time dateTime={days[0].date}>{formatActivityDate(days[0].date)}</time>
           {" – "}<time dateTime={days[days.length - 1].date}>{formatActivityDate(days[days.length - 1].date)}</time>
-          {hiddenWeeks > 0 && <span className="sm:hidden"> · last 26 weeks shown</span>}
         </p>
-        {/* Columns are fluid so the calendar fills the figure; below 640px only the last 26 weeks show. */}
+        {/* The 3D terrain is the view. The flat calendar shows while it loads, without JavaScript, or if it fails;
+            its columns are fluid, and below 640px only the last 26 weeks show. */}
+        <TerrainView days={days} fallback={
         <div aria-hidden="true" className="mt-3 max-w-full overflow-hidden" style={{ "--weeks": weeks, "--weeks-sm": Math.min(weeks, 26) } as CSSProperties}>
           <div className="grid grid-cols-[repeat(var(--weeks-sm),minmax(0,1fr))] gap-x-0.5 font-mono text-index text-text-2 sm:grid-cols-[repeat(var(--weeks),minmax(0,1fr))]">
             {monthColumns(days, offset).map(({ label, column }) => {
@@ -62,6 +63,7 @@ export function ActivityGrid({ calendar }: { calendar: ContributionCalendar }) {
             Less{levels.map((level) => <span key={level} className={`size-2.5 rounded-xs ${level}`} />)}More
           </p>
         </div>
+        } />
         <details className="mt-3">
           <summary className="hover-underline min-h-6 w-fit cursor-pointer text-small">Contribution dates and counts</summary>
           <div className="mt-2 grid gap-2">
@@ -79,7 +81,6 @@ export function ActivityGrid({ calendar }: { calendar: ContributionCalendar }) {
           </div>
         </details>
       </div>
-      <TerrainActivation days={days} />
     </>
   );
 }

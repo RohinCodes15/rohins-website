@@ -24,13 +24,19 @@ import { cn } from "@/lib/utils";
 const DAYS = 7;
 const GAP = 0.18;
 // Tallest column, in cells.
-const MAX_HEIGHT = 4.2;
+const MAX_HEIGHT = 6;
 const DEG = Math.PI / 180;
 // Tilt of the terrain view; flat is looking straight down.
 const PITCH_TERRAIN = 56 * DEG;
-const YAW_TERRAIN = 18 * DEG;
+const YAW_TERRAIN = 30 * DEG;
 // How far it turns before the edges start pulling back.
-const YAW_LIMIT = 38 * DEG;
+const YAW_LIMIT = 60 * DEG;
+// While left alone, the terrain sways gently around its resting turn.
+const DRIFT = 7 * DEG;
+const DRIFT_SPEED = 0.35;
+const DRIFT_STIFFNESS = 6;
+// Seconds after the last drag or key press before the sway resumes.
+const DRIFT_PAUSE = 2.5;
 const PITCH_LIMIT = 66 * DEG;
 // Drag, in radians per px.
 const DRAG_YAW = 0.32 * DEG;
@@ -135,7 +141,8 @@ function buildCells(data: readonly number[], endDate: string, levels?: ActivityT
       row: slot % DAYS,
       count,
       level: levels?.[index] ?? (count === 0 ? 0 : Math.ceil(norm * 4)),
-      height: 0.06 + Math.sqrt(norm) * MAX_HEIGHT,
+      // Log scale, so one very busy day does not flatten every other column.
+      height: 0.06 + (Math.log1p(count) / Math.log1p(max)) * MAX_HEIGHT,
       date: new Date(start.getTime() + index * 86_400_000),
     };
   });
@@ -153,6 +160,11 @@ function hexToRgb(value: string): Rgb {
 function shade([r, g, b]: Rgb, amount: number) {
   const k = 1 - amount;
   return `rgb(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)})`;
+}
+
+function lighten([r, g, b]: Rgb, amount: number) {
+  const mix = (c: number) => Math.round(c + (255 - c) * amount);
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
 }
 
 function readPalette(node: HTMLElement): Palette {
@@ -218,23 +230,23 @@ function visibleFaces(
     if (cos > 0) {
       faces.push({
         points: [p(x0, 0, z1), p(x1, 0, z1), p(x1, h, z1), p(x0, h, z1)],
-        tone: 0.22,
+        tone: 0.14,
       });
     } else {
       faces.push({
         points: [p(x0, 0, z0), p(x1, 0, z0), p(x1, h, z0), p(x0, h, z0)],
-        tone: 0.22,
+        tone: 0.14,
       });
     }
     if (sin > 0.001) {
       faces.push({
         points: [p(x1, 0, z0), p(x1, 0, z1), p(x1, h, z1), p(x1, h, z0)],
-        tone: 0.38,
+        tone: 0.26,
       });
     } else if (sin < -0.001) {
       faces.push({
         points: [p(x0, 0, z0), p(x0, 0, z1), p(x0, h, z1), p(x0, h, z0)],
-        tone: 0.38,
+        tone: 0.26,
       });
     }
   }
@@ -323,6 +335,8 @@ export default function ActivityTerrain({
     visible: false,
     started: false,
     reduceMotion: false,
+    clock: 0,
+    lastInput: Number.NEGATIVE_INFINITY,
   });
   const cellsRef = useRef(cells);
   useEffect(() => {
@@ -470,9 +484,11 @@ export default function ActivityTerrain({
         const fill = shade(color, face.tone);
         ctx.fillStyle = fill;
         ctx.fill();
-        // A hairline in the same colour closes the seams between faces.
-        ctx.strokeStyle = fill;
-        ctx.lineWidth = 0.6;
+        // A hairline closes the seams between faces; column tops get a lighter
+        // rim so low columns still read against a dark background.
+        const top = face.tone === 0 && cell.count > 0;
+        ctx.strokeStyle = top ? lighten(color, 0.35) : fill;
+        ctx.lineWidth = top ? 1 : 0.6;
         ctx.stroke();
       }
     }
@@ -504,6 +520,8 @@ export default function ActivityTerrain({
   const stepSprings = useCallback((dt: number) => {
     const s = sim.current;
     let energy = 0;
+    s.clock += dt;
+    const drifting = !s.reduceMotion && s.pitchTarget > 0 && s.clock - s.lastInput > DRIFT_PAUSE;
     if (!s.drag) {
       // Spin coasts, then the edge pulls it back in range.
       s.yawSpeed *= 0.5 ** (dt / SPIN_HALF_LIFE);
@@ -511,15 +529,18 @@ export default function ActivityTerrain({
       if (s.pitchTarget === 0) {
         // Flat is always square on.
         target = 0;
+      } else if (drifting) {
+        target = YAW_TERRAIN + DRIFT * Math.sin(s.clock * DRIFT_SPEED);
       } else if (s.yaw > YAW_LIMIT) {
         target = YAW_LIMIT;
       } else if (s.yaw < -YAW_LIMIT) {
         target = -YAW_LIMIT;
       }
       if (target !== s.yaw) {
+        const stiffness = drifting ? DRIFT_STIFFNESS : EDGE_STIFFNESS;
         s.yawSpeed +=
-          ((target - s.yaw) * EDGE_STIFFNESS -
-            s.yawSpeed * 2 * Math.sqrt(EDGE_STIFFNESS)) *
+          ((target - s.yaw) * stiffness -
+            s.yawSpeed * 2 * Math.sqrt(stiffness)) *
           dt;
       }
       s.yaw += s.yawSpeed * dt;
@@ -549,7 +570,8 @@ export default function ActivityTerrain({
         Math.abs(target - s.bumps[i])
       );
     }
-    return energy;
+    // The sway never rests, so frames keep coming while it is on screen.
+    return drifting ? Math.max(energy, 1) : energy;
   }, []);
 
   const tick = useCallback(
@@ -634,8 +656,16 @@ export default function ActivityTerrain({
 
     let onScreen = false;
     const update = () => {
+      const wasVisible = s.visible;
       s.visible = onScreen && !document.hidden;
       if (s.visible) {
+        // Coming back into view replays the rise from flat.
+        if (s.started && !wasVisible && onScreen && s.pitchTarget > 0 && !s.reduceMotion) {
+          s.pitch = 0;
+          s.pitchSpeed = 0;
+          s.yaw = 0;
+          turnIn();
+        }
         if (!s.started) {
           s.started = true;
           if (s.pitchTarget > 0) {
@@ -787,6 +817,7 @@ export default function ActivityTerrain({
       return;
     }
     s.drag = null;
+    s.lastInput = s.clock;
     setDragging(false);
     if (!drag.moved) {
       wake();
@@ -816,6 +847,7 @@ export default function ActivityTerrain({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLCanvasElement>) => {
+    sim.current.lastInput = sim.current.clock;
     const moves: Record<string, [number, number]> = {
       ArrowLeft: [-1, 0],
       ArrowRight: [1, 0],
@@ -842,7 +874,7 @@ export default function ActivityTerrain({
 
   const describe = (cell: Cell) =>
     `${cell.count} ${cell.count === 1 ? "contribution" : "contributions"} on ${formatDay(cell.date)}`;
-  const readout = active ? describe(active) : `${total.toLocaleString("en-US")} contributions in this view`;
+  const readout = active ? describe(active) : `${title} · ${total.toLocaleString("en-US")} contributions`;
 
   return (
     <div
@@ -877,7 +909,7 @@ export default function ActivityTerrain({
       <canvas
         aria-label={`${title}: ${total.toLocaleString("en-US")} contributions over ${weeks} weeks. Use the arrow keys to inspect days, or Home and End for the first and last day.`}
         className={cn(
-          "block h-52 w-full touch-pan-y focus-visible:outline-offset-[-3px] sm:h-64",
+          "block h-64 w-full touch-pan-y focus-visible:outline-offset-[-3px] sm:h-96",
           dragging ? "cursor-grabbing" : "cursor-grab"
         )}
         onBlur={() => {

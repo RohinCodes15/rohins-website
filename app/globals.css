@@ -784,7 +784,7 @@
   }
 }
 
-html:not([data-theme]) :is(.stack-filters, .terrain-activation) {
+html:not([data-theme]) .stack-filters {
   display: none;
 }
 
