@@ -99,7 +99,7 @@ test("an unknown stored value falls back to system", async ({ page }) => {
 test("the toggle works from the keyboard with a visible focus ring", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/");
-  for (const name of ["Skip to content", "Overview", "Selected work", "A Closer Look", "Technology stack", "Research and interests", "Activity", "Contact"]) {
+  for (const name of ["Skip to content", "Overview", "Selected work", "A Closer Look", "My Technical Arsenal", "Research and interests", "Activity", "Contact"]) {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("link", { name, exact: true })).toBeFocused();
   }

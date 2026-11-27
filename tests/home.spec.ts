@@ -16,7 +16,8 @@ test("the production homepage exposes the portfolio heading without JavaScript",
     await expect(page).toHaveTitle(/Rohin Pidathala/);
     await expect(page.getByRole("link", { name: /View activity on GitHub/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Language" })).toBeHidden();
-    await expect(page.getByText("TypeScript", { exact: true })).toBeVisible();
+    // The stack inventory rows render without JavaScript (the featured logo row also names TypeScript).
+    await expect(page.getByText("TypeScript", { exact: true }).last()).toBeVisible();
     // The theme toggle needs JavaScript, so it stays hidden (keeping its space) and the OS theme applies.
     await expect(page.getByRole("group", { name: "Theme" })).toBeHidden();
   } finally {
@@ -87,4 +88,16 @@ test("the homepage gallery links every screen to its case study", async ({ page 
   for (const alt of await links.locator("img").evaluateAll((images) => images.map((image) => image.getAttribute("alt") ?? ""))) expect(alt.length).toBeGreaterThan(20);
   await links.first().focus();
   await expect(links.first().locator(".gallery-label")).toHaveCSS("opacity", "1");
+});
+
+test("the stack logos name themselves on keyboard focus and link to projects", async ({ page }) => {
+  await page.goto("/");
+  const logos = page.getByRole("list", { name: "Featured technologies" }).getByRole("listitem");
+  await expect(logos).toHaveCount(9);
+  const python = logos.first().locator(".logo-assembly-item");
+  await expect(python).toHaveAttribute("href", "/work/accessforge");
+  await python.focus();
+  await expect(python.locator(".logo-assembly-label")).toHaveCSS("opacity", "1");
+  await expect(python).toContainText("Python");
+  await expect(page.getByRole("list", { name: "Featured technologies" })).toContainText("C++");
 });

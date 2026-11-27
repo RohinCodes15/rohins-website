@@ -97,3 +97,12 @@ test("projectHref builds the case-study route and encodes the slug", () => {
   assert.equal(projectHref("risklens"), "/work/risklens");
   assert.equal(projectHref("a b/c"), "/work/a%20b%2Fc");
 });
+
+test("featured stack logos exist and reference known stack entries", async () => {
+  const { featuredStack, stack } = await import("../content/stack.ts");
+  assert.equal(featuredStack.length, 9);
+  for (const { label, logo, stackId } of featuredStack) {
+    assert.ok(existsSync(new URL(`../public${logo}`, import.meta.url)), `${label}: ${logo} is missing`);
+    if (stackId) assert.ok(stackId in stack, `${label}: unknown stack id ${stackId}`);
+  }
+});

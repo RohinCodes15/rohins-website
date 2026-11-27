@@ -17,7 +17,7 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Portfolio sections" });
-  const stackLink = nav.getByRole("link", { name: "Technology stack" });
+  const stackLink = nav.getByRole("link", { name: "My Technical Arsenal" });
   await stackLink.click();
   await expect(page).toHaveURL(/#stack$/);
   await expect(stackLink).toHaveAttribute("aria-current", "location");
@@ -26,10 +26,12 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
   await language.focus();
   await page.keyboard.press("Space");
   await expect(language).toHaveAttribute("aria-pressed", "true");
-  const stack = page.getByRole("region", { name: "Technology stack" });
-  await expect(stack.getByRole("listitem")).toHaveCount(2);
-  await expect(stack.getByRole("listitem").filter({ hasText: "TypeScript" })).toHaveCount(1);
-  await expect(stack.getByRole("listitem").filter({ hasText: "Python" })).toHaveCount(1);
+  const stack = page.getByRole("region", { name: "My Technical Arsenal" });
+  // The inventory is the region's last list; the first is the featured logo row.
+  const rows = stack.getByRole("list").last().getByRole("listitem");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.filter({ hasText: "TypeScript" })).toHaveCount(1);
+  await expect(rows.filter({ hasText: "Python" })).toHaveCount(1);
   await expect(stack.getByRole("status")).toHaveText("2 technologies shown");
 
   // Stack rows also link to projects, so check that link and then follow the Selected work row.

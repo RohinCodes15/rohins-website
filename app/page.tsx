@@ -4,6 +4,7 @@ import { SectionHeading } from "@/components/editorial/section-heading";
 import { ParallaxGallery } from "@/components/editorial/parallax-gallery";
 import { ProjectCard } from "@/components/editorial/project-card";
 import { Activity, ActivityFrame } from "@/components/sections/activity";
+import { LogoAssembly } from "@/components/sections/logo-assembly";
 import { StackExplorer } from "@/components/sections/stack-explorer";
 import { SectionNavigation } from "@/components/site/section-navigation";
 import { Container } from "@/components/ui/container";
@@ -19,7 +20,7 @@ import { closerLook } from "@/content/gallery";
 import { projects } from "@/content/projects";
 import { research } from "@/content/research";
 import { githubProfile, site } from "@/content/site";
-import { stack, type StackId } from "@/content/stack";
+import { featuredStack, stack, type StackId } from "@/content/stack";
 import { findBySlug, projectHref, projectsByStack } from "@/lib/content";
 
 // Dark values are the brief's; light values are darker steps of the same hues so they hold contrast on #fafafa.
@@ -36,6 +37,15 @@ export default function Home() {
   const technologies = Object.entries(stack).map(([id, entry]) => ({
     id, ...entry, usedIn: projectsByStack(projects, id as StackId).map(({ slug, title }) => ({ slug, title })),
   }));
+  // A logo with projects links to the first (lead) project and lists them all on hover and focus.
+  const logos = featuredStack.map(({ stackId, ...technology }) => {
+    const usedIn = stackId ? projectsByStack(projects, stackId) : [];
+    return {
+      ...technology,
+      href: technology.href ?? (usedIn[0] && projectHref(usedIn[0].slug)),
+      detail: usedIn.length ? `Used in ${usedIn.map(({ title }) => title).join(", ")}` : undefined,
+    };
+  });
   // Work leads: it is the verified substance.
   const sections: { id: string; label: string; content: ReactNode }[] = [];
   if (featured.length) sections.push({
@@ -55,7 +65,13 @@ export default function Home() {
   });
 
   if (technologies.length) sections.push({
-    id: "stack", label: "Technology stack", content: <Container><StackExplorer technologies={technologies} /></Container>,
+    id: "stack", label: "My Technical Arsenal", content: (
+      <Container>
+        <p className="grid-main max-w-prose text-lead text-text-2">The technologies behind my ideas.</p>
+        <div className="col-span-full mt-6 lg:mt-8"><LogoAssembly logos={logos} /></div>
+        <StackExplorer technologies={technologies} />
+      </Container>
+    ),
   });
   if (leadership.length) sections.push({ id: "leadership", label: "Leadership", content: <Leadership entries={leadership} /> });
   if (certifications.length) sections.push({ id: "certifications", label: "Certifications", content: <Certifications entries={certifications} /> });
