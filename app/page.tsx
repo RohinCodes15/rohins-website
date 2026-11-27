@@ -68,7 +68,7 @@ export default function Home() {
     id: "stack", label: "My Technical Arsenal", content: (
       <Container>
         <p className="grid-main max-w-prose text-lead text-text-2">The technologies behind my ideas.</p>
-        <div className="col-span-full mt-6 lg:mt-8"><LogoAssembly logos={logos} /></div>
+        <div className="grid-figure mt-8 min-w-0 lg:max-w-[calc(100%-var(--grid-gutter))]"><LogoAssembly logos={logos} /></div>
         <StackExplorer technologies={technologies} />
       </Container>
     ),
