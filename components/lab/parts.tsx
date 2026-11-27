@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import { Button } from "@/components/ui/button";
 
 export const percent = (value: number, digits = 1) => `${(value * 100).toFixed(digits)}%`;
@@ -7,6 +8,11 @@ export const fixed = (value: number, digits = 2) => value.toFixed(digits).replac
 const tickDecimals = (step: number) => Math.max(0, Math.ceil(-Math.log10(step) - 1e-9));
 export const tickNumber = (value: number, step: number) => fixed(value, tickDecimals(step));
 export const tickPercent = (value: number, step: number) => percent(value, tickDecimals(step * 100)).replace("-", "−");
+
+/** A readout number that glides to each new value as the controls move; short, so it keeps up with a drag. */
+export const LabNumber = ({ value, digits = 2, percent = false }: { value: number; digits?: number; percent?: boolean }) => (
+  <AnimatedNumber value={value} digits={digits} percent={percent} duration={350} />
+);
 
 /** Shown on every demo: these are teaching tools on generated data, not findings or advice. */
 export function DemoNote() {
@@ -18,7 +24,7 @@ export function DemoNote() {
 }
 
 /** Metric readout: numeral first visually, label below, both in text tokens. */
-export function Readout({ items }: { items: readonly { label: string; value: string; note?: string }[] }) {
+export function Readout({ items }: { items: readonly { label: string; value: ReactNode; note?: string }[] }) {
   return (
     <dl className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
       {items.map(({ label, value, note }) => (

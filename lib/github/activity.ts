@@ -11,7 +11,8 @@ type Cooldown = { until: number; attempts: number };
 
 const HOUR = 3_600_000;
 const MAX_AGE = 24 * HOUR;
-const KEY = `activity:v1:public:${GITHUB_LOGIN}`;
+// v2: snapshots carry profile stats.
+const KEY = `activity:v2:public:${GITHUB_LOGIN}`;
 const COOLDOWN = `${KEY}:cooldown`;
 
 export function createActivityReader(cache: Cache, fetchCalendar: () => Promise<ContributionResult>, now = Date.now) {

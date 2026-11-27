@@ -2,20 +2,24 @@ import { Fragment, type CSSProperties } from "react";
 import { activityMonths, activityStats, formatActivityDate, monthColumns } from "@/lib/github/calendar";
 import type { ContributionCalendar } from "@/lib/github/validate";
 import { TerrainView } from "@/components/terrain/terrain-activation";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 
 const levels = ["bg-terrain-0", "bg-terrain-1", "bg-terrain-2", "bg-terrain-3", "bg-terrain-4"];
 
-function Metric({ label, value }: { label: string; value: string }) {
+/** A counted stat: the number counts up in the accent blue, the label sits quietly below. */
+function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex min-w-0 flex-col">
       <dt className="order-2 mt-1 font-mono text-meta text-text-2">{label}</dt>
-      <dd className="order-1 text-metric">{value}</dd>
+      <dd className="order-1 text-metric text-[light-dark(#2563eb,#3b82f6)]"><AnimatedNumber value={value} /></dd>
     </div>
   );
 }
 
+const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
+
 export function ActivityGrid({ calendar }: { calendar: ContributionCalendar }) {
-  const { days, total } = calendar;
+  const { days, total, stats } = calendar;
   const { longest, busiest } = activityStats(days);
   const offset = (new Date(days[0].date).getUTCDay() + 6) % 7;
   const weeks = Math.ceil((days.length + offset) / 7);
@@ -24,8 +28,11 @@ export function ActivityGrid({ calendar }: { calendar: ContributionCalendar }) {
     <>
       <div className="px-3 pt-4 pb-3 sm:px-4">
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:flex sm:flex-wrap sm:items-end sm:gap-x-12">
-          <Metric label={total === 1 ? "contribution" : "contributions"} value={total.toLocaleString("en-US")} />
-          {busiest.length > 0 && <Metric label={`${longest === 1 ? "day" : "days"}, longest streak`} value={String(longest)} />}
+          <Metric label={plural(total, "contribution", "contributions")} value={total} />
+          {busiest.length > 0 && <Metric label={`${plural(longest, "day", "days")}, longest streak`} value={longest} />}
+          {stats?.pullRequests !== undefined && <Metric label={`${plural(stats.pullRequests, "pull request", "pull requests")}, past year`} value={stats.pullRequests} />}
+          {stats?.publicRepos !== undefined && <Metric label={plural(stats.publicRepos, "public repository", "public repositories")} value={stats.publicRepos} />}
+          {stats?.stars !== undefined && <Metric label={plural(stats.stars, "star", "stars")} value={stats.stars} />}
           {busiest.length > 0 && <div className="col-span-full flex min-w-0 flex-col">
             <dt className="order-2 mt-1 font-mono text-meta text-text-2">{busiest.length === 1 ? "busiest day of the week" : "busiest days of the week"}</dt>
             <dd className="order-1 text-h3">{busiest.join(", ")}</dd>

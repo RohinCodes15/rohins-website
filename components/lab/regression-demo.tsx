@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import { MIN_SAMPLES, fitLine, generateLine } from "@/lib/lab/regression";
-import { ChartFigure, Controls, DemoNote, Key, Readout, fixed, percent, tickNumber } from "./parts";
+import { ChartFigure, Controls, DemoNote, Key, LabNumber, Readout, fixed, tickNumber } from "./parts";
 import { Plot, linePath } from "./plot";
 import { Slider } from "./slider";
 
@@ -52,11 +52,11 @@ export function RegressionDemo() {
         </Controls>
       </div>
       <Readout items={[
-        { label: "fitted slope β̂", value: fixed(fit.slope), note: `standard error ${fixed(fit.slopeError, 3)}` },
+        { label: "fitted slope β̂", value: <LabNumber value={fit.slope} />, note: `standard error ${fixed(fit.slopeError, 3)}` },
         { label: "95% interval for β", value: `${fixed(fit.interval[0])} to ${fixed(fit.interval[1])}`, note: covers ? "contains the true slope" : "misses the true slope" },
-        { label: "R²", value: fixed(fit.rSquared, 3) },
-        { label: "fitted intercept α̂", value: fixed(fit.intercept) },
-        { label: `intervals covering β, ${REPEATS} fresh samples`, value: percent(coverage, 0), note: "should be close to 95%" },
+        { label: "R²", value: <LabNumber value={fit.rSquared} digits={3} /> },
+        { label: "fitted intercept α̂", value: <LabNumber value={fit.intercept} /> },
+        { label: `intervals covering β, ${REPEATS} fresh samples`, value: <LabNumber value={coverage} digits={0} percent />, note: "should be close to 95%" },
       ]} />
     </div>
   );

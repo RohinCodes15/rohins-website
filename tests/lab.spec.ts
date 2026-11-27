@@ -13,7 +13,8 @@ test("the research lab labels its demos and recomputes when a parameter changes"
   await expect(page.getByText(/not research findings or investment advice/)).toHaveCount(3);
 
   const monteCarlo = page.getByRole("region", { name: "Monte Carlo price paths" });
-  const analytic = monteCarlo.getByText("analytic mean S₀e^(μT)").locator("..").locator("dd").first();
+  // The readout animates; its screen-reader text is the settled value.
+  const analytic = monteCarlo.getByText("analytic mean S₀e^(μT)").locator("..").locator("dd").first().locator(".sr-only");
   await expect(analytic).toHaveText("107.25");
   const drift = monteCarlo.getByRole("slider", { name: "Drift μ (annual)" });
   await drift.focus();

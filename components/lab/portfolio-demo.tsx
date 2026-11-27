@@ -3,7 +3,7 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import { frontier, normalRisk, portfolioMoments, simulatedRisk } from "@/lib/lab/portfolio";
 import { histogram } from "@/lib/lab/random";
-import { ChartFigure, Controls, DemoNote, HALO, Key, Readout, percent, tickNumber, tickPercent } from "./parts";
+import { ChartFigure, Controls, DemoNote, HALO, Key, LabNumber, Readout, percent, tickNumber, tickPercent } from "./parts";
 import { Plot, linePath } from "./plot";
 import { Slider } from "./slider";
 
@@ -79,12 +79,12 @@ export function PortfolioDemo() {
         </Plot>
       </ChartFigure>
       <Readout items={[
-        { label: "expected return μₚ", value: percent(moments.expected) },
-        { label: "volatility σₚ", value: percent(moments.volatility), note: `${percent(weighted)} if ρ were 1` },
-        { label: "95% VaR, normal formula", value: percent(normal.var95) },
-        { label: "95% VaR, simulated", value: percent(simulated.var95) },
-        { label: "95% expected shortfall, normal", value: percent(normal.es95) },
-        { label: "95% expected shortfall, simulated", value: percent(simulated.es95) },
+        { label: "expected return μₚ", value: <LabNumber value={moments.expected} digits={1} percent /> },
+        { label: "volatility σₚ", value: <LabNumber value={moments.volatility} digits={1} percent />, note: `${percent(weighted)} if ρ were 1` },
+        { label: "95% VaR, normal formula", value: <LabNumber value={normal.var95} digits={1} percent /> },
+        { label: "95% VaR, simulated", value: <LabNumber value={simulated.var95} digits={1} percent /> },
+        { label: "95% expected shortfall, normal", value: <LabNumber value={normal.es95} digits={1} percent /> },
+        { label: "95% expected shortfall, simulated", value: <LabNumber value={simulated.es95} digits={1} percent /> },
       ]} />
     </div>
   );

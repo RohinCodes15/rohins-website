@@ -107,3 +107,31 @@ test("rejects malformed GraphQL errors and invalid collection bounds", () => {
   valid.data.user.contributionsCollection.startedAt = "not a timestamp";
   assert.equal(reason(valid), "malformed");
 });
+
+function withProfile(repositories: unknown, pullRequests: unknown) {
+  const input = body([[day("2026-01-04", 3)]]);
+  const user = input.data.user as Record<string, unknown>;
+  user.repositories = repositories;
+  (user.contributionsCollection as Record<string, unknown>).totalPullRequestContributions = pullRequests;
+  return input;
+}
+
+test("adds profile stats when they validate, summing stars over every public repository", () => {
+  const result = validateContributionResponse(
+    withProfile({ totalCount: 3, nodes: [{ stargazerCount: 2 }, { stargazerCount: 0 }, { stargazerCount: 5 }] }, 4),
+    "octocat",
+  );
+  assert.ok(result.ok);
+  assert.deepEqual(result.calendar.stats, { publicRepos: 3, stars: 7, pullRequests: 4 });
+});
+
+test("omits stars when not every repository was counted, and drops malformed stats without failing the calendar", () => {
+  const partial = validateContributionResponse(withProfile({ totalCount: 150, nodes: [{ stargazerCount: 1 }] }, 2), "octocat");
+  assert.ok(partial.ok);
+  assert.deepEqual(partial.calendar.stats, { publicRepos: 150, pullRequests: 2 });
+
+  const broken = validateContributionResponse(withProfile({ totalCount: -1, nodes: "x" }, "many"), "octocat");
+  assert.ok(broken.ok);
+  assert.equal(broken.calendar.stats, undefined);
+  assert.equal(broken.calendar.total, 3);
+});

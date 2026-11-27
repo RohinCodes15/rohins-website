@@ -12,9 +12,11 @@ const MIN_RETRY_MS = 60_000;
 const QUERY = `query($login: String!) {
   user(login: $login) {
     login
+    repositories(ownerAffiliations: OWNER, privacy: PUBLIC, first: 100) { totalCount nodes { stargazerCount } }
     contributionsCollection {
       startedAt
       endedAt
+      totalPullRequestContributions
       contributionCalendar {
         totalContributions
         weeks { contributionDays { date contributionCount contributionLevel } }

@@ -8,12 +8,22 @@ export interface ContributionDay {
   readonly level: ContributionLevel;
 }
 
+/** Public profile counts. Each is present only when GitHub returned it in a valid form. */
+export interface ProfileStats {
+  readonly publicRepos?: number;
+  /** Total stars across every public repository; omitted when not every repository was counted. */
+  readonly stars?: number;
+  /** Pull requests opened in the calendar's window. */
+  readonly pullRequests?: number;
+}
+
 export interface ContributionCalendar {
   readonly login: string;
   readonly startedAt: string;
   readonly endedAt: string;
   readonly total: number;
   readonly days: readonly ContributionDay[];
+  readonly stats?: ProfileStats;
 }
 
 export type ValidationFailure =
@@ -79,6 +89,21 @@ function parseDays(weeks: readonly unknown[]): ContributionDay[] | null {
   return days.length > 0 ? days : null;
 }
 
+/** Profile counts that validate; malformed ones are dropped rather than failing the calendar. */
+function parseStats(repositories: unknown, pullRequests: unknown): ProfileStats | undefined {
+  const stats: { publicRepos?: number; stars?: number; pullRequests?: number } = {};
+  if (isRecord(repositories) && isCount(repositories.totalCount)) {
+    stats.publicRepos = repositories.totalCount;
+    const nodes = repositories.nodes;
+    const stars = Array.isArray(nodes) ? nodes.map((node) => (isRecord(node) ? node.stargazerCount : undefined)) : [];
+    if (nodes && Array.isArray(nodes) && nodes.length === repositories.totalCount && stars.every(isCount)) {
+      stats.stars = stars.reduce((total, count) => total + count, 0);
+    }
+  }
+  if (isCount(pullRequests)) stats.pullRequests = pullRequests;
+  return Object.keys(stats).length ? stats : undefined;
+}
+
 /** Validates a GitHub GraphQL contribution response body for `expectedLogin`. */
 export function validateContributionResponse(body: unknown, expectedLogin: string): ValidationResult {
   if (!isRecord(body)) return fail("malformed");
@@ -108,8 +133,9 @@ export function validateContributionResponse(body: unknown, expectedLogin: strin
   const sum = days.reduce((total, day) => total + day.count, 0);
   if (sum !== calendar.totalContributions) return fail("invalid-calendar");
 
+  const stats = parseStats(user.repositories, collection.totalPullRequestContributions);
   return {
     ok: true,
-    calendar: { login: user.login, startedAt, endedAt, total: calendar.totalContributions, days },
+    calendar: { login: user.login, startedAt, endedAt, total: calendar.totalContributions, days, ...(stats && { stats }) },
   };
 }

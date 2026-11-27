@@ -3,7 +3,7 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import { simulateGbm } from "@/lib/lab/monte-carlo";
 import { histogram } from "@/lib/lab/random";
-import { ChartFigure, Controls, DemoNote, Key, HALO, Readout, fixed, percent, tickNumber } from "./parts";
+import { ChartFigure, Controls, DemoNote, Key, HALO, LabNumber, Readout, fixed, percent, tickNumber } from "./parts";
 import { Plot, linePath } from "./plot";
 import { Slider } from "./slider";
 
@@ -68,12 +68,12 @@ export function MonteCarloDemo() {
         </Plot>
       </ChartFigure>
       <Readout items={[
-        { label: "simulated mean at T", value: fixed(result.estimate), note: `± ${fixed(1.96 * result.standardError)} (95%)` },
-        { label: "analytic mean S₀e^(μT)", value: fixed(result.analytic), note: `${fixed(gap, 1)} standard errors away` },
-        { label: "paths ending below 100", value: percent(result.belowStart) },
-        { label: "5th percentile", value: fixed(result.p05) },
-        { label: "median", value: fixed(result.p50) },
-        { label: "95th percentile", value: fixed(result.p95) },
+        { label: "simulated mean at T", value: <LabNumber value={result.estimate} />, note: `± ${fixed(1.96 * result.standardError)} (95%)` },
+        { label: "analytic mean S₀e^(μT)", value: <LabNumber value={result.analytic} />, note: `${fixed(gap, 1)} standard errors away` },
+        { label: "paths ending below 100", value: <LabNumber value={result.belowStart} digits={1} percent /> },
+        { label: "5th percentile", value: <LabNumber value={result.p05} /> },
+        { label: "median", value: <LabNumber value={result.p50} /> },
+        { label: "95th percentile", value: <LabNumber value={result.p95} /> },
       ]} />
     </div>
   );
