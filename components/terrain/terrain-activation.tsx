@@ -5,8 +5,10 @@ import type { ContributionDay } from "@/lib/github/validate";
 
 type Terrain = typeof import("@/components/kokonutui/activity-terrain").default;
 
-/** The terrain shows the most recent weeks, where the activity is; the stats above still cover the full year. */
-const RECENT_WEEKS = 20;
+/** The terrain starts on the Monday after the quiet spell ends (the week of Aug 3–9, 2026 and earlier are left
+    out); the stats above still cover the full year. */
+const TERRAIN_START = "2026-08-10";
+const TERRAIN_START_LABEL = "Aug 10, 2026";
 
 /** Start loading the terrain this far before the Activity section scrolls into view. */
 const PRELOAD_MARGIN = "600px";
@@ -37,7 +39,8 @@ export function TerrainView({ days, fallback }: { days: readonly ContributionDay
     return () => { cancelled = true; observer.disconnect(); };
   }, []);
 
-  const range = days.slice(-RECENT_WEEKS * 7);
+  const recent = days.filter(({ date }) => date >= TERRAIN_START);
+  const range = recent.length ? recent : days;
   const ready = Terrain && !failed;
 
   return (
@@ -45,7 +48,7 @@ export function TerrainView({ days, fallback }: { days: readonly ContributionDay
       {ready
         ? <Terrain
             key={range[0].date}
-            title={range.length < days.length ? `Last ${RECENT_WEEKS} weeks` : "Contribution terrain"}
+            title={range.length < days.length ? `Since ${TERRAIN_START_LABEL}` : "Contribution terrain"}
             data={range.map(({ count }) => count)}
             levels={range.map(({ level }) => level)}
             endDate={range[range.length - 1].date}
