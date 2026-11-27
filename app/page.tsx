@@ -65,7 +65,7 @@ export default function Home() {
   });
 
   if (technologies.length) sections.push({
-    id: "stack", label: "My Technical Arsenal", centered: true, content: (
+    id: "stack", label: "Tech Stack", centered: true, content: (
       <Container>
         <div className={`col-span-full min-w-0 ${CENTERED_COLUMN}`}>
           <p className="max-w-prose text-lead text-text-2">The technologies behind my ideas.</p>

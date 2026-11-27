@@ -17,7 +17,7 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Portfolio sections" });
-  const stackLink = nav.getByRole("link", { name: "My Technical Arsenal" });
+  const stackLink = nav.getByRole("link", { name: "Tech Stack" });
   await stackLink.click();
   await expect(page).toHaveURL(/#stack$/);
   await expect(stackLink).toHaveAttribute("aria-current", "location");
@@ -26,7 +26,7 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
   await language.focus();
   await page.keyboard.press("Space");
   await expect(language).toHaveAttribute("aria-pressed", "true");
-  const stack = page.getByRole("region", { name: "My Technical Arsenal" });
+  const stack = page.getByRole("region", { name: "Tech Stack" });
   // The inventory is the region's last list; the first is the featured logo row.
   const rows = stack.getByRole("list").last().getByRole("listitem");
   await expect(rows).toHaveCount(2);

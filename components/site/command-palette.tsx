@@ -22,7 +22,7 @@ function buildItems(): Item[] {
     { id: "intro", group: "Sections", label: "About", hint: site.intro, keywords: ["overview", "bio"], href: "/#intro" },
     { id: "activity", group: "Sections", label: "GitHub activity", keywords: ["contributions"], href: "/#activity" },
     { id: "work", group: "Sections", label: "Selected work", keywords: ["projects"], href: "/#work" },
-    { id: "stack", group: "Sections", label: "My Technical Arsenal", keywords: ["technology stack", "skills", "tools"], href: "/#stack" },
+    { id: "stack", group: "Sections", label: "Tech Stack", keywords: ["technology stack", "skills", "tools"], href: "/#stack" },
     { id: "research", group: "Sections", label: "Research and interests", keywords: ["research"], href: "/#research" },
   ];
   if (leadership.length) sections.push({ id: "leadership", group: "Sections", label: "Leadership", href: "/#leadership" });
