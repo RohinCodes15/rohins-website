@@ -752,6 +752,46 @@
   to { transform: perspective(800px) rotateX(0) translateY(0); }
 }
 
+/* Featured project stack (components/editorial/project-card.tsx). A plain list of panels is the default.
+   From 1024 px wide (side-by-side panels of one height) and 700 px tall, with scroll timelines and no reduced-motion preference, each panel pins
+   a step below the one before, and each earlier panel shrinks and dims as later ones cover it. */
+.project-stack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 64rem) and (min-height: 43.75rem) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .project-stack {
+      gap: 40svh;
+      padding-block-end: 4rem;
+      view-timeline-name: --project-stack;
+    }
+
+    .project-stack-item {
+      position: sticky;
+      inset-block-start: calc(6rem + var(--i) * 1.25rem);
+    }
+
+    /* One height for every panel, so a panel without a screen still covers the one beneath it. */
+    .project-panel {
+      min-block-size: min(34rem, calc(100svh - 10rem));
+      transform-origin: 50% 0;
+      animation: stack-recede linear both;
+      animation-timeline: --project-stack;
+      animation-range: exit-crossing calc(var(--i) / var(--n) * 100%) exit-crossing calc((var(--i) + 1) / var(--n) * 100%);
+    }
+
+    .project-stack-item:last-child .project-panel {
+      animation: none;
+    }
+  }
+}
+
+@keyframes stack-recede {
+  to { transform: scale(calc(1 - (var(--n) - var(--i)) * 0.03)); filter: brightness(0.85); }
+}
+
 /* Architecture diagram: an edge traces itself from source to target when its list entry is pointed at. */
 .flow-trace {
   stroke-width: 2;

@@ -18,6 +18,14 @@ Updated November 26, 2026, after the final visual acceptance audit. The site is 
 - Navigation and stack filters get 140 ms colour transitions. A hovered or focused nav link shows an ink square where the probe marker sits. Unpressed filters are `--text-2`.
 - Checks: lint, typecheck, 42 unit tests, build with secret scan, 33 smoke checks (axe included). Screenshots at 390 and 1440 px in both themes, plus overflow at 320, 1024 and 2560 px, all 0.
 
+## Featured project stack (2026-11-26)
+
+- Added Skiper 16 (card stack scroll) in place of the Selected work rows. The files are `components/editorial/project-card.tsx` (`ProjectStack`) and `.project-stack` in `app/globals.css`. It is a CSS scroll timeline with no new dependency and no Skiper code.
+- Each panel's cover is the project's first real screen from `content/gallery.ts`. Rotation Index and Developer portfolio have no screens, so they get none.
+- Stacking runs only from 1024 × 700 px up. Below that, and under reduced motion, the panels form a plain list.
+- Checks: lint, typecheck, 75 unit tests, build with secret scan, 71 smoke passed with 1 skipped (token blank). A new smoke test covers the stack. Chromium screenshots at 1440, 1280, 768, 390, and 320 px in both themes showed 0 overflow and 0 console errors.
+- Full status and deviations: [FINAL_AUDIT.md](FINAL_AUDIT.md).
+
 ## Project screen gallery (2026-11-26)
 
 - Owner request: add Skiper UI's Skiper 30 (a parallax image gallery). As shipped it uses Lenis smooth scrolling (scroll hijacking), 13 stock images that are not included, and `framer-motion` plus `lenis`, which would breach the JS budget. The owner chose to adapt it instead: `components/editorial/parallax-gallery.tsx` plus `.parallax-gallery` in `app/globals.css`, a CSS scroll timeline with no JavaScript and no new dependency. No Skiper code is used; the component comment credits the idea.

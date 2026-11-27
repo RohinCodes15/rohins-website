@@ -2,7 +2,7 @@ import { Suspense, type ReactNode } from "react";
 import { PerspectiveCrawl } from "@/components/editorial/perspective-crawl";
 import { CENTERED_COLUMN, SectionHeading } from "@/components/editorial/section-heading";
 import { ParallaxGallery } from "@/components/editorial/parallax-gallery";
-import { ProjectCard } from "@/components/editorial/project-card";
+import { ProjectStack } from "@/components/editorial/project-card";
 import { Activity, ActivityFrame } from "@/components/sections/activity";
 import { LogoAssembly } from "@/components/sections/logo-assembly";
 import { StackExplorer } from "@/components/sections/stack-explorer";
@@ -49,7 +49,8 @@ export default function Home() {
   // Work leads: it is the verified substance.
   const sections: { id: string; label: string; content: ReactNode; centered?: boolean }[] = [];
   if (featured.length) sections.push({
-    id: "work", label: "Selected work", content: featured.map((project) => <ProjectCard key={project.slug} project={project} />),
+    // Each panel's cover is the project's first real screen in the closer-look set; projects without one get none.
+    id: "work", label: "Selected work", content: <ProjectStack items={featured.map((project) => ({ project, cover: closerLook.find((screen) => screen.project === project.slug) }))} />,
   });
   // Phone-shaped screens show their top 4:5 so no single screen fills a column.
   const screens = closerLook.map(({ project, ...image }) => ({

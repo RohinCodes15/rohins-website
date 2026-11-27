@@ -112,3 +112,14 @@ test("navigation labels roll on keyboard focus without changing their names or s
   expect(await link.boundingBox()).toEqual(before);
   await expect(link.locator("[aria-hidden='true']").first()).toBeAttached();
 });
+
+test("featured projects stack as pinned panels on wide screens and stay a plain list under reduced motion", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const items = page.locator(".project-stack-item");
+  await expect(items).toHaveCount(5);
+  await expect(items.first()).toHaveCSS("position", "sticky");
+  await expect(page.getByRole("region", { name: "Selected work" }).getByRole("img")).toHaveCount(3);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(items.first()).toHaveCSS("position", "static");
+});
