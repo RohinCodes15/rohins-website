@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { PerspectiveCrawl } from "@/components/editorial/perspective-crawl";
-import { SectionHeading } from "@/components/editorial/section-heading";
+import { CENTERED_COLUMN, SectionHeading } from "@/components/editorial/section-heading";
 import { ParallaxGallery } from "@/components/editorial/parallax-gallery";
 import { ProjectCard } from "@/components/editorial/project-card";
 import { Activity, ActivityFrame } from "@/components/sections/activity";
@@ -47,7 +47,7 @@ export default function Home() {
     };
   });
   // Work leads: it is the verified substance.
-  const sections: { id: string; label: string; content: ReactNode }[] = [];
+  const sections: { id: string; label: string; content: ReactNode; centered?: boolean }[] = [];
   if (featured.length) sections.push({
     id: "work", label: "Selected work", content: featured.map((project) => <ProjectCard key={project.slug} project={project} />),
   });
@@ -65,11 +65,13 @@ export default function Home() {
   });
 
   if (technologies.length) sections.push({
-    id: "stack", label: "My Technical Arsenal", content: (
+    id: "stack", label: "My Technical Arsenal", centered: true, content: (
       <Container>
-        <p className="grid-main max-w-prose text-lead text-text-2">The technologies behind my ideas.</p>
-        <div className="grid-figure mt-8 min-w-0 lg:max-w-[calc(100%-var(--grid-gutter))]"><LogoAssembly logos={logos} /></div>
-        <StackExplorer technologies={technologies} />
+        <div className={`col-span-full min-w-0 ${CENTERED_COLUMN}`}>
+          <p className="max-w-prose text-lead text-text-2">The technologies behind my ideas.</p>
+          <div className="mt-8"><LogoAssembly logos={logos} /></div>
+          <StackExplorer technologies={technologies} />
+        </div>
       </Container>
     ),
   });
@@ -135,9 +137,9 @@ export default function Home() {
         </section>
         {/* Repeats site.roleLine, so assistive tech skips it. */}
         <div aria-hidden="true"><PerspectiveCrawl lines={IDENTITIES} /></div>
-        {sections.map(({ id, label, content }, index) => (
+        {sections.map(({ id, label, content, centered }, index) => (
           <section key={id} aria-labelledby={id}>
-            <SectionHeading id={id} index={String(index + 1).padStart(2, "0")}>{label}</SectionHeading>
+            <SectionHeading id={id} index={String(index + 1).padStart(2, "0")} centered={centered}>{label}</SectionHeading>
             {content}
           </section>
         ))}
