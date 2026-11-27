@@ -24,7 +24,8 @@ export function ProjectCard({ project }: { project: Project }) {
         <h3 style={{ viewTransitionName: projectTitleTransition(project.slug) }} className="col-span-3 justify-self-start self-baseline pt-5 text-h2 wrap-anywhere sm:col-span-7 lg:col-start-4">
           <Link
             href={projectHref(project.slug)}
-            className="decoration-transparent after:absolute after:inset-0 group-focus-within/project:decoration-signal group-hover/project:decoration-signal"
+            roll
+            className="[--roll-line:transparent] after:absolute after:inset-0 group-focus-within/project:[--roll-line:var(--signal)] group-hover/project:[--roll-line:var(--signal)]"
           >
             {project.title}
           </Link>

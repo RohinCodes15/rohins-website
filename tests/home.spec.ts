@@ -101,3 +101,14 @@ test("the stack logos name themselves on keyboard focus and link to projects", a
   await expect(python).toContainText("Python");
   await expect(page.getByRole("list", { name: "Featured technologies" })).toContainText("C++");
 });
+
+test("navigation labels roll on keyboard focus without changing their names or size", async ({ page }, testInfo) => {
+  await page.goto("/");
+  const link = page.getByRole("navigation", { name: "Portfolio sections" }).getByRole("link", { name: "Selected work", exact: true });
+  const before = await link.boundingBox();
+  await link.focus();
+  const letter = link.locator(".text-roll-letter").first();
+  if (testInfo.project.name === "desktop") await expect(letter).not.toHaveCSS("transform", "none");
+  expect(await link.boundingBox()).toEqual(before);
+  await expect(link.locator("[aria-hidden='true']").first()).toBeAttached();
+});

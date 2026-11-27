@@ -123,8 +123,8 @@ export default function Home() {
             <div className="grid-main max-w-prose lg:row-start-3">
               <p className="text-text-2">{site.intro}</p>
               <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-                {site.email && <Link href={`mailto:${site.email}`}>Email</Link>}
-                {site.links.map(({ label, href }) => <Link key={href} href={href} external>{label}</Link>)}
+                {site.email && <Link href={`mailto:${site.email}`} roll>Email</Link>}
+                {site.links.map(({ label, href }) => <Link key={href} href={href} external roll>{label}</Link>)}
               </p>
               {site.bio && <details className="mt-3">
                 <summary className="hover-underline cursor-pointer">Full introduction</summary>

@@ -122,7 +122,7 @@ function Metadata({ project }: { project: Project }) {
     { label: "Stack", value: <ul>{project.stack.map((id) => <li key={id}>{stack[id].label}</li>)}</ul> },
   ];
   if (project.links.length) rows.push({ label: "Links", value: <ul>{project.links.map(({ href, label }) => (
-    <li key={href}><Link href={href} external={href.startsWith("https://")}>{label}</Link></li>
+    <li key={href}><Link href={href} external={href.startsWith("https://")} roll>{label}</Link></li>
   ))}</ul> });
   const repo = project.repository;
   if (repo) rows.push({ label: "Repository", value: (
@@ -160,7 +160,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           <Container className="gap-y-5 pt-8 lg:gap-y-6 lg:pt-24">
             <h1 id="overview" className="grid-figure scroll-mt-8 hero-datum pb-5 text-h1 lg:row-start-1 lg:pb-6"><span className="inline-block" style={{ viewTransitionName: projectTitleTransition(project.slug) }}>{project.title}</span></h1>
             <SectionNavigation label="Case study sections" sections={[{ id: "overview", label: "Overview" }, ...sections.map(({ id, label }) => ({ id, label }))]}>
-              <Link href="/#work" className="mb-4 inline-flex min-h-6 items-center font-mono text-meta">Back to selected work</Link>
+              <Link href="/#work" className="mb-4 inline-flex min-h-6 items-center font-mono text-meta" roll>Back to selected work</Link>
             </SectionNavigation>
             <div className="grid-main max-w-prose lg:row-start-2">
               <p className="text-lead">{project.summary}</p>

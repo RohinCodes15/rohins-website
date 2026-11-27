@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { TextRoll } from "@/components/ui/text-roll";
 import { CommandPaletteTrigger } from "./command-palette-trigger";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -72,7 +73,7 @@ export function SectionNavigation({ sections, label = "Portfolio sections", chil
                 className="group/nav inline-flex min-h-6 items-center gap-2 text-text-2 transition-colors duration-(--duration-micro) ease-out hover:text-text aria-[current=location]:text-text"
               >
                 <span data-marker aria-hidden="true" className={`size-1.5 shrink-0 transition-colors duration-(--duration-micro) ease-out ${current === id ? (probe ? "bg-transparent" : "bg-probe") : "bg-transparent group-hover/nav:bg-text-3 group-focus-visible/nav:bg-text-3"}`} />
-                {label}
+                <TextRoll text={label} />
               </a>
             </li>
           ))}

@@ -15,10 +15,10 @@ export function Contact({ email, links, resume }: Pick<Site, "email" | "links" |
           </div>
         )}
         <ul className="flex flex-wrap gap-x-6 gap-y-2">
-          {links.map(({ href, label }) => <li key={href}><Link href={href} external={href.startsWith("https://")}>{label}</Link></li>)}
+          {links.map(({ href, label }) => <li key={href}><Link href={href} external={href.startsWith("https://")} roll>{label}</Link></li>)}
           {resume && (
             <li>
-              <Link href={resume.href}>Résumé (PDF)</Link>
+              <Link href={resume.href} roll>Résumé (PDF)</Link>
               <span className="ms-2 font-mono text-meta text-text-2">updated <time dateTime={resume.updated}>{resume.updated}</time></span>
             </li>
           )}
