@@ -463,22 +463,45 @@
 
 /* Logo assembly (components/sections/logo-assembly.tsx). Sits in the same column as the stack list below it:
    below 640px a five-column grid, above it one row whose first and last logos meet the column edges. Each item
-   carries --d (signed distance from the centre) and --ad (its absolute value). */
+   carries --d (signed distance from the centre) and --ad (its absolute value). Hovering or focusing a logo shows
+   its name and projects on one readout line under the row, in space the row reserves, so nothing below moves or
+   gets covered. */
 .logo-assembly {
   /* Sideways spread stays small so edge logos stay inside the row's clip; the arc lift carries the fan. */
   --spread: clamp(0.5rem, 0.25rem + 1.75vw, 1.25rem);
   --lift: clamp(0.75rem, 0.25rem + 1.5vw, 1.5rem);
+  --readout: 2.75rem;
 
+  position: relative;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1.25rem 0.75rem;
-  padding-block: 0.5rem 3rem;
+  padding-block: 0.5rem var(--readout);
   overflow-x: clip;
 
   @media (width >= 40rem) {
     display: flex;
     justify-content: space-between;
     gap: 0.75rem;
+  }
+
+  /* A quiet hint holds the readout line until a logo is pointed at; touch screens get neither. */
+  &::after {
+    content: "Point at a logo to see where it\2019s used";
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: 0.75rem;
+    font-size: var(--text-small);
+    color: var(--text-2);
+    transition: opacity var(--duration-micro) ease-out;
+  }
+
+  &:has(.logo-assembly-item:is(:hover, :focus-visible))::after { opacity: 0; }
+
+  @media (hover: none) {
+    --readout: 2rem;
+
+    &::after { content: none; }
   }
 }
 
@@ -491,7 +514,6 @@
 }
 
 .logo-assembly-item {
-  position: relative;
   display: grid;
   justify-items: center;
   border-radius: var(--radius-sm);
@@ -502,27 +524,24 @@
   max-inline-size: 5.25rem;
   block-size: auto;
   aspect-ratio: 1;
-  transition: transform var(--duration-ui) ease-out;
+  transition: translate var(--duration-ui) ease-out;
 }
 
 .logo-assembly-label {
   position: absolute;
-  inset-block-start: calc(100% + 0.5rem);
-  inline-size: max-content;
-  max-inline-size: 11rem;
+  inset-inline: 0;
+  inset-block-end: 0.75rem;
   font-size: var(--text-small);
   line-height: 1.3;
-  text-align: center;
+  text-align: start;
   opacity: 0;
-  transition: opacity var(--duration-ui) ease-out;
+  pointer-events: none;
+  transition: opacity var(--duration-micro) ease-out;
 }
 
-/* Labels at the row's ends open inward so the clip never cuts them. */
-.logo-assembly > li:first-child .logo-assembly-label { inset-inline-start: 0; text-align: start; }
-.logo-assembly > li:last-child .logo-assembly-label { inset-inline-end: 0; text-align: end; }
-
 .logo-assembly-item:is(:hover, :focus-visible) {
-  & .logo-assembly-mark { transform: translateY(-0.25rem) scale(1.06); }
+  /* A lift, not a scale: a larger edge logo would be cut by the row's clip. */
+  & .logo-assembly-mark { translate: 0 -0.3rem; }
   & .logo-assembly-label { opacity: 1; }
 }
 
@@ -532,7 +551,8 @@
       view-timeline-name: --logos;
     }
 
-    .logo-assembly > li {
+    /* The image moves, not the list item, so the readout label stays anchored to the row. */
+    .logo-assembly-mark {
       animation: logo-assemble linear both;
       animation-timeline: --logos;
       animation-range: entry 0% cover 50%;

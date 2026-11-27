@@ -8,7 +8,7 @@ export type AssemblyLogo = {
   logo: string;
   /** Where the logo leads: a case study, or an external profile. */
   href?: string;
-  /** Second line of the hover and focus label, for example the projects that use it. */
+  /** Shown after the name in the hover and focus readout, for example the projects that use it. */
   detail?: string;
   /** Single-colour logo that inverts in dark mode. */
   mono?: boolean;
@@ -43,8 +43,8 @@ function Item({ label, logo, href, detail, mono }: AssemblyLogo) {
     <>
       <Image src={logo} alt="" width={LOGO_SIZE} height={LOGO_SIZE} unoptimized className={cn("logo-assembly-mark", mono && "dark:invert")} />
       <span className="logo-assembly-label">
-        <span className="block text-text">{label}</span>
-        {detail && <span className="block text-text-2">{detail}</span>}
+        <span className="text-text">{label}</span>
+        {detail && <>{" "}<span className="ms-2 text-text-2">{detail}</span></>}
       </span>
     </>
   );
