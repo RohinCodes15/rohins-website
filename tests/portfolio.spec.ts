@@ -102,3 +102,20 @@ test("a project gallery shows every screen with alt text", async ({ page }) => {
   for (const alt of await screens.evaluateAll((images) => images.map((image) => image.getAttribute("alt") ?? ""))) expect(alt.length).toBeGreaterThan(20);
   await expect(page.getByText(/Nine screens from the game/)).toBeVisible();
 });
+
+test("case studies show reading progress once reading starts; the homepage has none", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".reading-progress")).toHaveCount(0);
+  await page.goto("/work/accessforge");
+  const progress = page.locator(".reading-progress");
+  await expect(progress).toHaveAttribute("data-shown", "false");
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await expect(progress).toHaveAttribute("aria-valuenow", "100");
+  await expect(progress).toHaveAttribute("data-shown", "true");
+  const corner = await progress.boundingBox();
+  await progress.focus();
+  await page.keyboard.press("ArrowLeft");
+  expect((await progress.boundingBox())?.x).toBeLessThan(corner?.x ?? 0);
+  await page.keyboard.press("Home");
+  await expect.poll(async () => (await progress.boundingBox())?.x).toBe(corner?.x);
+});

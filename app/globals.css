@@ -574,6 +574,102 @@
   }
 }
 
+/* Reading progress (components/site/reading-progress.tsx). --progress is a registered integer, so the ring and the
+   counter both tween between whole percentages; durations come from tokens, so reduced motion makes them instant. */
+@property --progress {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.reading-progress {
+  position: fixed;
+  inset-inline-end: 1.5rem;
+  inset-block-end: 1.5rem;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  inline-size: 3.5rem;
+  block-size: 3.5rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 50%;
+  background: light-dark(#ffffff, #18181b);
+  color: light-dark(#0a0a0b, #fafafa);
+  counter-reset: reading var(--progress);
+  translate: var(--offset-x, 0) var(--offset-y, 0);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  opacity: 0;
+  scale: 0.85;
+  visibility: hidden;
+  transition:
+    opacity var(--duration-ui) ease-out,
+    scale var(--duration-ui) ease-out,
+    visibility 0s linear var(--duration-ui),
+    --progress var(--duration-ui) ease-out;
+
+  &[data-shown="true"] {
+    opacity: 1;
+    scale: 1;
+    visibility: visible;
+    transition:
+      opacity var(--duration-ui) ease-out,
+      scale var(--duration-ui) ease-out,
+      visibility 0s,
+      --progress var(--duration-ui) ease-out;
+  }
+
+  &[data-dragging="true"] { cursor: grabbing; }
+
+  @media (width >= 40rem) {
+    inline-size: 4rem;
+    block-size: 4rem;
+  }
+}
+
+.reading-progress-ring {
+  position: absolute;
+  inset: 0;
+  rotate: -90deg;
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.reading-progress-track { stroke: currentColor; opacity: 0.15; }
+
+.reading-progress-bar {
+  stroke: light-dark(#2563eb, #3b82f6);
+  stroke-linecap: round;
+  stroke-dashoffset: calc(113.1 * (100 - var(--progress)) / 100);
+}
+
+.reading-progress-number {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+
+  &::after { content: counter(reading) "%"; }
+}
+
+.reading-progress-tip {
+  position: absolute;
+  inset-block-end: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-small);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-micro) ease-out;
+}
+
+.reading-progress:is(:hover, :focus-visible) .reading-progress-tip { opacity: 1; }
+
 @keyframes gallery-drift {
   from { transform: translateY(var(--drift-from)); }
   to { transform: translateY(var(--drift-to)); }

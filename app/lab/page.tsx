@@ -5,6 +5,7 @@ import { ClientOnly } from "@/components/lab/client-only";
 import { MonteCarloDemo } from "@/components/lab/monte-carlo-demo";
 import { PortfolioDemo } from "@/components/lab/portfolio-demo";
 import { RegressionDemo } from "@/components/lab/regression-demo";
+import { ReadingProgress } from "@/components/site/reading-progress";
 import { SectionNavigation } from "@/components/site/section-navigation";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -81,6 +82,7 @@ export default function LabPage() {
             {id === "limits" ? content : <Container>{content}</Container>}
           </section>
         ))}
+        <ReadingProgress />
       </main>
     </>
   );

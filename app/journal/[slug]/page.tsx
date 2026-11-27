@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArticleBody, headingId } from "@/components/journal/article-body";
+import { ReadingProgress } from "@/components/site/reading-progress";
 import { SectionNavigation } from "@/components/site/section-navigation";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -43,6 +44,7 @@ export default async function JournalArticle({ params }: PageProps<"/journal/[sl
         </p>
       </Container>
       <div className="mt-12"><ArticleBody blocks={entry.body} /></div>
+      <ReadingProgress />
     </main>
   );
 }

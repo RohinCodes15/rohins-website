@@ -5,6 +5,7 @@ import { ArchitectureDiagram } from "@/components/editorial/architecture-diagram
 import { ParallaxGallery } from "@/components/editorial/parallax-gallery";
 import { SectionHeading } from "@/components/editorial/section-heading";
 import { StatusMark } from "@/components/editorial/status-mark";
+import { ReadingProgress } from "@/components/site/reading-progress";
 import { SectionNavigation } from "@/components/site/section-navigation";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -176,6 +177,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
             {content}
           </section>
         ))}
+        <ReadingProgress />
       </main>
     </>
   );
