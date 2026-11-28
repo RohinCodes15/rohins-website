@@ -34,8 +34,12 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
   await expect(rows.filter({ hasText: "Python" })).toHaveCount(1);
   await expect(stack.getByRole("status")).toHaveText("7 technologies shown");
 
-  // Stack rows also link to projects, so check that link and then follow the Selected work row.
-  await expect(stack.getByRole("link", { name: "AccessForge AI" }).first()).toHaveAttribute("href", "/work/accessforge");
+  // A focused technology names its projects in its description and links them in the detail line; then follow
+  // the Selected work row.
+  const typescript = stack.getByRole("button", { name: "TypeScript", exact: true });
+  await typescript.focus();
+  await expect(typescript).toHaveAccessibleDescription(/Used in .*AccessForge AI/);
+  await expect(stack.locator(".stack-stage").getByRole("link", { name: "AccessForge AI" })).toHaveAttribute("href", "/work/accessforge");
   await page.getByRole("region", { name: "Selected work" }).getByRole("link", { name: "Developer portfolio" }).click();
   await expect(page).toHaveURL(/\/work\/portfolio$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Developer portfolio");
@@ -46,7 +50,7 @@ test("navigation, keyboard filters, and the featured project work", async ({ pag
 test("a case study shows its status, sections, and captioned figure", async ({ page }) => {
   await page.goto("/");
   const work = page.getByRole("region", { name: "Selected work" });
-  await expect(work.getByText("In development")).toHaveCount(3);
+  await expect(work.getByText("In development")).toHaveCount(2);
   await work.getByRole("link", { name: "AccessForge AI" }).click();
   await expect(page).toHaveURL(/\/work\/accessforge$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("AccessForge AI");

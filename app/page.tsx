@@ -1,8 +1,9 @@
-import { Suspense, type ReactNode } from "react";
+import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { PerspectiveCrawl } from "@/components/editorial/perspective-crawl";
 import { CENTERED_COLUMN, SectionHeading } from "@/components/editorial/section-heading";
-import { ParallaxGallery } from "@/components/editorial/parallax-gallery";
-import { ProjectStack } from "@/components/editorial/project-card";
+import { HeroLines } from "@/components/editorial/hero-lines";
+import Magnet from "@/components/reactbits/magnet";
+import { SelectedWork } from "@/components/editorial/project-card";
 import { Activity, ActivityFrame } from "@/components/sections/activity";
 import { LogoAssembly } from "@/components/sections/logo-assembly";
 import { StackExplorer } from "@/components/sections/stack-explorer";
@@ -16,12 +17,12 @@ import { journal } from "@/content/journal";
 import { Leadership } from "@/components/sections/leadership";
 import { certifications } from "@/content/certifications";
 import { leadership } from "@/content/leadership";
-import { closerLook } from "@/content/gallery";
+import { workAccents, workScreens } from "@/content/gallery";
 import { projects } from "@/content/projects";
 import { research } from "@/content/research";
 import { githubProfile, site } from "@/content/site";
 import { featuredStack, stack, type StackId } from "@/content/stack";
-import { findBySlug, projectHref, projectsByStack } from "@/lib/content";
+import { projectHref, projectsByStack } from "@/lib/content";
 
 // Dark values are the brief's; light values are darker steps of the same hues so they hold contrast on #fafafa.
 const IDENTITIES = [
@@ -30,10 +31,11 @@ const IDENTITIES = [
   { text: "QUANTITATIVE RESEARCH", color: "light-dark(#dc2626, #ef4444)" },
 ];
 
-const MAX_SCREEN_RATIO = 5 / 4;
-
 export default function Home() {
   const featured = projects.filter((project) => project.featured);
+  const nameLines = site.name.split(" ");
+  // Index of each word's first character in the whole name, so the stagger runs across both lines.
+  const nameStarts = nameLines.map((_, index) => nameLines.slice(0, index).join("").length);
   const technologies = Object.entries(stack).map(([id, entry]) => ({
     id, ...entry, usedIn: projectsByStack(projects, id as StackId).map(({ slug, title }) => ({ slug, title })),
   }));
@@ -49,22 +51,10 @@ export default function Home() {
   // Work leads: it is the verified substance.
   const sections: { id: string; label: string; content: ReactNode; centered?: boolean }[] = [];
   if (featured.length) sections.push({
-    // Each panel's cover is the project's first real screen (closer-look set, then case-study figure); projects without one get none.
-    id: "work", label: "Selected work", content: <ProjectStack items={featured.map((project) => ({
-      project, cover: closerLook.find((screen) => screen.project === project.slug) ?? project.caseStudy?.figures[0],
+    // Each project fans its own work screens; one without screens shows its status note.
+    id: "work", label: "Selected work", content: <SelectedWork items={featured.map((project) => ({
+      project, screens: workScreens[project.slug] ?? [], accent: workAccents[project.slug],
     }))} />,
-  });
-  // Phone-shaped screens show their top 4:5 so no single screen fills a column.
-  const screens = closerLook.map(({ project, ...image }) => ({
-    ...image, height: Math.min(image.height, Math.round(image.width * MAX_SCREEN_RATIO)), href: projectHref(project), label: findBySlug(projects, project)?.title,
-  }));
-  if (screens.length) sections.push({
-    id: "closer-look", label: "A Closer Look", content: (
-      <Container>
-        <p className="grid-main max-w-prose text-lead text-text-2">Exploring the interfaces, systems, and ideas behind my work.</p>
-        <ParallaxGallery images={screens} sizes="(min-width: 82.5rem) 26rem, 32vw" className="col-span-full mt-8 lg:mt-10 sm:[--gallery-aspect:3/2]" />
-      </Container>
-    ),
   });
 
   if (technologies.length) sections.push({
@@ -119,15 +109,24 @@ export default function Home() {
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:bg-surface focus:px-4 focus:py-2">Skip to content</a>
       <main id="main" tabIndex={-1} className="pb-section-sm lg:pb-section">
-        <section aria-labelledby="intro">
-          <Container className="gap-y-5 pt-8 lg:gap-y-6 lg:pt-24">
-            <h1 id="intro" className="grid-figure scroll-mt-8 hero-datum pb-5 text-display lg:row-start-1 lg:pb-6">{site.name}</h1>
+        <section aria-labelledby="intro" className="hero-entrance relative lg:min-h-[min(100svh,48rem)]">
+          <Container className="relative z-1 gap-y-5 pt-8 lg:gap-y-6 lg:pt-24">
+            {/* One word per line, set larger than the display token: the name is the hero's typographic mass. Each character
+                is its own span for the entrance (globals.css, Hero entrance), so the label gives screen readers the name
+                whole; the space keeps the text "First Last". */}
+            <h1 id="intro" aria-label={site.name} className="grid-figure scroll-mt-8 hero-datum pb-5 text-display text-[length:clamp(3.75rem,1rem+11vw,11.5rem)] lg:row-start-1 lg:pb-6">
+              {nameLines.map((word, index) => <span key={word} aria-hidden="true" className="block">
+                {[...word].map((char, at) => <span key={at} className="hero-char" style={{ "--char": nameStarts[index] + at } as CSSProperties}>{char}</span>)}
+                {index < nameLines.length - 1 && " "}
+              </span>)}
+            </h1>
             <SectionNavigation sections={[{ id: "intro", label: "Overview" }, ...sections.map(({ id, label }) => ({ id, label }))]} />
-            <p className="grid-main max-w-prose text-lead lg:self-baseline">{site.roleLine}</p>
-            {site.readout && <p className="grid-margin self-start border-t border-rule pt-2 font-mono text-meta text-text-2 lg:col-start-11 lg:row-start-2 lg:self-baseline lg:border-t-0 lg:pt-0">{site.readout}</p>}
-            <div className="grid-main max-w-prose lg:row-start-3">
+            <p className="hero-follow grid-main max-w-prose text-lead [--delay:0.55s] lg:self-baseline">{site.roleLine}</p>
+            {site.readout && <p className="hero-follow grid-main self-start border-t border-rule pt-2 font-mono text-meta text-text-2 [--delay:0.65s] lg:row-start-3 lg:-mt-3 lg:border-t-0 lg:pt-0">{site.readout}</p>}
+            <div className="hero-follow grid-main max-w-prose [--delay:0.8s] lg:row-start-4">
               <p className="text-text-2">{site.intro}</p>
-              <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+              <p className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+                {featured.length > 0 && <Magnet wrapperClassName="me-1 max-sm:w-full"><a href="#work" className="press inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-action px-5 text-body font-medium text-on-probe transition-colors duration-(--duration-micro) hover:bg-action-hover">Explore my work</a></Magnet>}
                 {site.email && <Link href={`mailto:${site.email}`} roll>Email</Link>}
                 {site.links.map(({ label, href }) => <Link key={href} href={href} external roll>{label}</Link>)}
               </p>
@@ -137,6 +136,7 @@ export default function Home() {
               </details>}
             </div>
           </Container>
+          <HeroLines />
         </section>
         {/* Repeats site.roleLine, so assistive tech skips it. */}
         <div aria-hidden="true"><PerspectiveCrawl lines={IDENTITIES} /></div>

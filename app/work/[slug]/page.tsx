@@ -9,6 +9,8 @@ import { ReadingProgress } from "@/components/site/reading-progress";
 import { SectionNavigation } from "@/components/site/section-navigation";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
+import { DecryptedText } from "@/components/ui/decrypted-text";
+import Magnet from "@/components/reactbits/magnet";
 import { projects } from "@/content/projects";
 import { site } from "@/content/site";
 import { stack } from "@/content/stack";
@@ -123,7 +125,7 @@ function Metadata({ project }: { project: Project }) {
     { label: "Stack", value: <ul>{project.stack.map((id) => <li key={id}>{stack[id].label}</li>)}</ul> },
   ];
   if (project.links.length) rows.push({ label: "Links", value: <ul>{project.links.map(({ href, label }) => (
-    <li key={href}><Link href={href} external={href.startsWith("https://")} roll>{label}</Link></li>
+    <li key={href}><Magnet><Link href={href} external={href.startsWith("https://")} roll>{label}</Link></Magnet></li>
   ))}</ul> });
   const repo = project.repository;
   if (repo) rows.push({ label: "Repository", value: (
@@ -140,7 +142,7 @@ function Metadata({ project }: { project: Project }) {
     <dl className="grid-margin grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 self-start border-t border-rule pt-3 font-mono text-meta lg:col-start-11 lg:row-start-2 lg:grid-cols-1 lg:gap-y-0 lg:border-t-0 lg:pt-0">
       {rows.map(({ label, value }) => (
         <div key={label} className="contents lg:block lg:pb-3">
-          <dt className="text-text-2">{label}</dt>
+          <dt className="text-text-2"><DecryptedText text={label} replayOn /></dt>
           <dd className="min-w-0 text-text">{value}</dd>
         </div>
       ))}

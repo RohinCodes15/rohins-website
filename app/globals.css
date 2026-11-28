@@ -32,6 +32,9 @@
   --probe: light-dark(#c8102e, #ff4d6d);
   --probe-mark: light-dark(#c8102e, #dc143c);
   --on-probe: #ffffff;
+  /* Solid call-to-action fill under white text (AA in both themes; --signal-fill is 4.49:1 in dark). */
+  --action: light-dark(#0047ff, #2563eb);
+  --action-hover: light-dark(#0036c2, #1d4ed8);
 
   --terrain-0: light-dark(#eeeef0, #17181c);
   --terrain-1: light-dark(#c9d8ff, #172447);
@@ -180,6 +183,8 @@
   --color-probe: var(--probe);
   --color-probe-mark: var(--probe-mark);
   --color-on-probe: var(--on-probe);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
   --color-terrain-0: var(--terrain-0);
   --color-terrain-1: var(--terrain-1);
   --color-terrain-2: var(--terrain-2);
@@ -396,6 +401,91 @@
   }
 }
 
+/* Hero lines (components/editorial/hero-lines.tsx). Below lg, a full-bleed band under the intro; from lg, the
+   right 58% of the hero, full height, behind the text. Masks dissolve every edge into the page, so no box ever shows. The
+   static drawing stays until the WebGL lines are live and returns if they stop. */
+.hero-lines {
+  --hero-line: light-dark(#2563eb, #3b82f6);
+  --hero-line-hi: light-dark(#93c5fd, #fafafa);
+  --hero-line-accent: light-dark(#dc2626, #ef4444);
+  position: relative;
+  block-size: 15rem;
+  pointer-events: none;
+  mask-image:
+    linear-gradient(to bottom, transparent, #000 25%, #000 70%, transparent),
+    linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  mask-composite: intersect;
+
+  @media (width >= 40rem) {
+    block-size: 20rem;
+  }
+
+  @media (width >= 64rem) {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: 58%;
+    block-size: auto;
+    mask-image:
+      linear-gradient(to right, transparent 15%, #000 55%),
+      linear-gradient(to bottom, transparent, #000 8%, #000 88%, transparent);
+  }
+}
+
+.hero-lines-static,
+.hero-lines-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-lines-static {
+  inline-size: 100%;
+  block-size: 100%;
+  transition: opacity 1.2s ease-out;
+}
+
+.hero-lines[data-live] .hero-lines-static {
+  opacity: 0;
+}
+
+/* Hero entrance (app/page.tsx). The name's characters rise in turn, then the titles, the introduction and the lines
+   fade in: about 1.4 s in all. Modelled on the React Bits Split Text "rise" effect without its code or GSAP. It is CSS
+   over server HTML, so nothing waits on JavaScript and the final frame is the static page. It plays on the first
+   homepage view of a tab session, never on scroll, and not at all under reduced motion. <html data-hero-played>
+   switches it off (lib/hero-entrance.ts). */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-hero-played]) .hero-entrance {
+    .hero-char {
+      display: inline-block;
+      animation: hero-rise 0.8s var(--ease-datum) calc(var(--char) * 40ms) backwards;
+    }
+
+    .hero-follow {
+      animation: hero-fade 0.6s ease-out var(--delay) backwards;
+    }
+
+    .hero-lines {
+      animation: hero-fade 1.3s ease-out 0.2s backwards;
+    }
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    /* About 40 px at the widest size; em keeps the rise in proportion on phones. */
+    translate: 0 0.22em;
+  }
+}
+
+/* Not from 0: the introduction is the page's largest paint, and a fully transparent element does not count until it
+   appears, which held LCP back by the length of the entrance (1.2 s to 3.3 s on Lighthouse mobile). */
+@keyframes hero-fade {
+  from {
+    opacity: 0.2;
+  }
+}
+
 /* Project screen gallery (components/editorial/parallax-gallery.tsx). The static grid is the default and shows
    every screen. With scroll timelines and no reduced-motion preference, the frame crops to 4:3 and each column
    drifts within it as the gallery crosses the viewport; travel stays at or under 36% of a column, so the frame
@@ -591,6 +681,8 @@
 @media (prefers-reduced-motion: no-preference) {
   @media (hover: hover) and (pointer: fine) {
     :is(a, button):hover .text-roll-letter { transform: translateY(-100%); }
+    /* Selected work: hovering anywhere on a panel rolls its case-study link, as when the link covered the panel. */
+    .work-panel:hover .work-cta .text-roll-letter { transform: translateY(-100%); }
   }
 
   :is(a, button):focus-visible .text-roll-letter { transform: translateY(-100%); }
@@ -752,44 +844,285 @@
   to { transform: perspective(800px) rotateX(0) translateY(0); }
 }
 
-/* Featured project stack (components/editorial/project-card.tsx). A plain list of panels is the default.
-   From 1024 px wide (side-by-side panels of one height) and 700 px tall, with scroll timelines and no reduced-motion preference, each panel pins
-   a step below the one before, and each earlier panel shrinks and dims as later ones cover it. */
-.project-stack {
-  display: grid;
-  gap: 1.5rem;
+/* Decrypted labels (components/ui/decrypted-text.tsx). While data-scramble is set, its value is drawn over the real
+   glyphs, which keep their place, width and accessible text with a transparent fill. */
+.decrypt {
+  position: relative;
 }
 
-@media (min-width: 64rem) and (min-height: 43.75rem) and (prefers-reduced-motion: no-preference) {
+.decrypt[data-scramble] {
+  -webkit-text-fill-color: transparent;
+}
+
+.decrypt[data-scramble]::after {
+  content: attr(data-scramble);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  white-space: pre;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Selected work (components/editorial/project-card.tsx). Numbered panels: copy in five columns, the project's real
+   screens in seven. --accent is sampled from each project's own interface (content/gallery.ts); a project without
+   one stays in ink. The lead screen sits in slight perspective with up to two more screens overlapping it; hover or
+   focus on the panel squares the lead and spreads the others (after React Bits Bounce Cards). Phone screens stand
+   in a row. From 1024 × 700 px, with scroll timelines and no reduced-motion preference, panels pin, the panel
+   being covered recedes in depth (after Skiper 17), and incoming screens reveal from below (after Skiper 34). All
+   of it is scrubbed by scroll, so it reverses when scrolling back; nothing hijacks the scroll. */
+.work-list {
+  display: grid;
+  gap: clamp(4rem, 10vw, 7rem);
+}
+
+.work-panel {
+  --accent: var(--text);
+  display: grid;
+  grid-template-areas: "head" "media" "body";
+  gap: 1.75rem;
+
+  @media (width >= 64rem) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "head media" "body media";
+    column-gap: 3rem;
+    row-gap: 1.5rem;
+    align-items: start;
+  }
+}
+
+.work-head { grid-area: head; }
+.work-media { grid-area: media; align-self: center; }
+.work-body { grid-area: body; }
+
+.work-number {
+  font-size: clamp(4.5rem, 2rem + 8vw, 9.5rem);
+  font-weight: 500;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--accent);
+  transition: color var(--duration-ui) ease-out;
+}
+
+.work-panel:is(:hover, :focus-within) .work-number {
+  color: var(--accent);
+}
+
+.work-title {
+  margin-block-start: 0.35em;
+  font-size: clamp(2.75rem, 1rem + 5vw, 6rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.work-tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: 2px;
+  font-size: var(--text-meta);
+  color: var(--text-2);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+.work-cta {
+  display: inline-block;
+  font-size: var(--text-h3);
+  --roll-line: var(--accent);
+  background-size: 100% 2px;
+}
+
+.work-cta:focus-visible {
+  outline-offset: 6px;
+}
+
+/* Screens: no frame or letterbox; each shows at its own aspect ratio. */
+.work-media {
+  position: relative;
+  perspective: 1600px;
+  padding-block: 1.5rem 2.5rem;
+}
+
+.work-shot {
+  display: block;
+  block-size: auto;
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent),
+    0 32px 64px -32px rgb(0 0 0 / 0.6);
+}
+
+.work-shot-0 {
+  position: relative;
+  z-index: 2;
+  inline-size: 86%;
+  margin-inline-start: auto;
+  transform-origin: 0 50%;
+  transform: rotateY(-6deg) rotateX(2deg);
+}
+
+.work-shot-1,
+.work-shot-2 {
+  position: absolute;
+  inline-size: 40%;
+}
+
+.work-shot-1 {
+  z-index: 1;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  transform: rotate(-3deg);
+}
+
+.work-shot-2 {
+  z-index: 3;
+  inset-block-end: 0.5rem;
+  inset-inline-end: 0;
+  inline-size: 32%;
+  transform: rotate(2.5deg);
+}
+
+.work-panel:is(:hover, :focus-within) {
+  .work-shot-0 { transform: translateY(-0.5rem); }
+  .work-shot-1 { transform: translate(-4%, 6%) rotate(-6deg); }
+  .work-shot-2 { transform: translate(4%, 6%) rotate(5deg); }
+}
+
+/* Phone screens: a row of three, the middle one raised. */
+.work-media-phones {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+
+  .work-shot {
+    position: relative;
+    inset: auto;
+    inline-size: 30%;
+    margin: 0 -2%;
+  }
+
+  .work-shot-0 { order: 1; z-index: 2; inline-size: 34%; transform: translateY(-1.5rem); }
+  .work-shot-1 { order: 0; transform: rotate(-4deg); }
+  .work-shot-2 { order: 2; transform: rotate(4deg); }
+}
+
+.work-panel:is(:hover, :focus-within) .work-media-phones {
+  .work-shot-0 { transform: translateY(-2.25rem); }
+  .work-shot-1 { transform: translateX(-8%) rotate(-7deg); }
+  .work-shot-2 { transform: translateX(8%) rotate(7deg); }
+}
+
+/* No published screen: the status note takes the image's place in display type. */
+.work-statement {
+  align-self: center;
+  max-inline-size: 22ch;
+  padding-block: 2rem;
+  font-size: clamp(1.75rem, 1rem + 2vw, 3rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--text-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .work-shot {
+    transition: transform var(--duration-spring) var(--ease-spring);
+  }
+
   @supports (animation-timeline: view()) {
-    .project-stack {
-      gap: 40svh;
-      padding-block-end: 4rem;
-      view-timeline-name: --project-stack;
+    .work-number {
+      animation: work-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 100%;
     }
 
-    .project-stack-item {
+    .work-shot-0 {
+      animation: work-reveal linear both;
+      animation-timeline: view();
+      /* Within entry: once a panel pins, its screens stop moving, so the reveal must finish before that. */
+      animation-range: entry 0% entry 90%;
+    }
+
+    .work-shot-1,
+    .work-shot-2 {
+      animation: work-follow linear both;
+      animation-timeline: view();
+      animation-range: entry 20% entry 100%;
+    }
+  }
+}
+
+/* Pinning needs every panel to fit the viewport, or the next panel would cover its lower part (and its link) for
+   good; tests/home.spec.ts measures this at the smallest qualifying sizes. */
+@media (width >= 64rem) and (height >= 37.5rem) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Sizes also follow the viewport height, so a pinned panel fits a short laptop window as well as a tall one. */
+    .work-number {
+      font-size: min(clamp(4rem, 1rem + 5vw, 7.5rem), 12svh);
+    }
+
+    .work-title {
+      font-size: min(clamp(2.75rem, 1rem + 4vw, 5.25rem), 8.5svh);
+    }
+
+    .work-shot-0 {
+      inline-size: min(86%, calc(56svh * var(--ratio)));
+    }
+
+    .work-media-phones .work-shot {
+      inline-size: min(30%, calc(46svh * var(--ratio)));
+    }
+
+    .work-media-phones .work-shot-0 {
+      inline-size: min(34%, calc(52svh * var(--ratio)));
+    }
+
+    .work-list {
+      gap: 0;
+      view-timeline-name: --work;
+    }
+
+    .work-item {
       position: sticky;
-      inset-block-start: calc(6rem + var(--i) * 1.25rem);
+      inset-block-start: 0;
+      min-block-size: 100svh;
+      padding-block: max(2rem, 7svh) 2svh;
+      background: var(--bg);
+      /* The covering panel's edge: a hairline and a shadow cast onto the panel it covers. */
+      box-shadow: 0 -1px 0 var(--rule), 0 -3rem 4rem -2rem light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.45));
     }
 
-    /* One height for every panel, so a panel without a screen still covers the one beneath it. */
-    .project-panel {
-      min-block-size: min(34rem, calc(100svh - 10rem));
+    .work-panel {
       transform-origin: 50% 0;
-      animation: stack-recede linear both;
-      animation-timeline: --project-stack;
+      animation: work-recede linear both;
+      animation-timeline: --work;
       animation-range: exit-crossing calc(var(--i) / var(--n) * 100%) exit-crossing calc((var(--i) + 1) / var(--n) * 100%);
     }
 
-    .project-stack-item:last-child .project-panel {
+    .work-item:last-child .work-panel {
       animation: none;
     }
   }
 }
 
-@keyframes stack-recede {
-  to { transform: scale(calc(1 - (var(--n) - var(--i)) * 0.03)); filter: brightness(0.85); }
+@keyframes work-rise {
+  from { translate: 0 0.3em; opacity: 0.2; }
+}
+
+@keyframes work-reveal {
+  from { clip-path: inset(35% 0 0 0 round 3px); translate: 0 8%; }
+  to { clip-path: inset(0 0 0 0 round 3px); }
+}
+
+@keyframes work-follow {
+  from { translate: 0 30%; opacity: 0; }
+}
+
+@keyframes work-recede {
+  to { transform: perspective(1400px) rotateX(5deg) scale(0.9); opacity: 0.35; }
 }
 
 /* Architecture diagram: an edge traces itself from source to target when its list entry is pointed at. */
@@ -865,6 +1198,12 @@
 
 html:not([data-theme]) .stack-filters {
   display: none;
+}
+
+/* Stack grid (components/sections/stack-explorer.tsx). Tiles take a view-transition name only while a filter change
+   runs, so they glide to their new cells then, and page-to-page transitions never capture 44 extra groups. */
+.stack-stage[data-filtering] .chroma-tile {
+  view-transition-name: var(--chroma-vt);
 }
 
 html:not([data-theme]) .activity-loading {

@@ -8,7 +8,7 @@ import { site } from "../content/site.ts";
 import { projects } from "../content/projects.ts";
 import { research } from "../content/research.ts";
 import { duplicateSlugs, findBySlug, projectHref, projectTitleTransition, projectsByStack } from "./content.ts";
-import type { Project, StackId } from "./types.ts";
+import type { Project, StackEntry, StackId } from "./types.ts";
 
 const project = (slug: string, stack: string[]): Project => ({
   slug,
@@ -104,6 +104,16 @@ test("featured stack logos exist and reference known stack entries", async () =>
   for (const { label, logo, stackId } of featuredStack) {
     assert.ok(existsSync(new URL(`../public${logo}`, import.meta.url)), `${label}: ${logo} is missing`);
     if (stackId) assert.ok(stackId in stack, `${label}: unknown stack id ${stackId}`);
+  }
+});
+
+test("every stack logo exists locally and only colour logos carry an accent", async () => {
+  const { stack } = await import("../content/stack.ts");
+  for (const { label, logo, accent, mono } of Object.values(stack) as StackEntry[]) {
+    if (logo) assert.ok(existsSync(new URL(`../public${logo}`, import.meta.url)), `${label}: ${logo} is missing`);
+    if (accent) assert.match(accent, /^#[0-9a-f]{6}$/, `${label}: accent`);
+    assert.ok(!(mono && accent), `${label}: a mono logo has no brand colour`);
+    if (!logo) assert.equal(accent, undefined, `${label}: an accent without a logo`);
   }
 });
 

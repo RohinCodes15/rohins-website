@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { test } from "node:test";
-import { closerLook } from "../content/gallery.ts";
+import { workScreens } from "../content/gallery.ts";
 import { projects } from "../content/projects.ts";
 import { balanceColumns } from "./gallery.ts";
 
@@ -22,11 +22,15 @@ test("balanceColumns deals equal shapes round-robin and returns empty columns wh
   assert.deepEqual(balanceColumns([], 2), [[], []]);
 });
 
-test("the homepage gallery shows real files from projects with case studies", () => {
-  assert.ok(closerLook.length > 0);
-  for (const { project, src, alt } of closerLook) {
-    assert.ok(projects.some(({ slug }) => slug === project), `${src}: unknown project ${project}`);
-    assert.ok(existsSync(new URL(`../public${src}`, import.meta.url)), `${src} is missing`);
-    assert.ok(alt.length > 20, `${src}: alt text too short`);
+test("selected work screens are real files, at most three per featured project, filed under their own project", () => {
+  const featured = new Set(projects.filter(({ featured }) => featured).map(({ slug }) => slug));
+  for (const [slug, screens] of Object.entries(workScreens)) {
+    assert.ok(featured.has(slug), `${slug}: not a featured project`);
+    assert.ok(screens.length <= 3, `${slug}: more than three screens`);
+    for (const { project, src, alt, width, height } of screens) {
+      assert.equal(project, slug, `${src}: filed under ${slug}`);
+      assert.ok(existsSync(new URL(`../public${src}`, import.meta.url)), `${src} is missing`);
+      assert.ok(alt.length > 20 && width > 0 && height > 0, `${src}: alt text or size missing`);
+    }
   }
 });

@@ -67,6 +67,8 @@ for (const colorScheme of ["light", "dark"] as const) {
   test(`the production homepage passes axe in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
     await page.goto("/");
+    // Contrast is judged on the settled page, not mid-way through the hero entrance's fades.
+    await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a instanceof CSSAnimation && a.animationName.startsWith("hero-")).map((a) => a.finished)));
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       .analyze();
@@ -77,17 +79,6 @@ for (const colorScheme of ["light", "dark"] as const) {
 test("the development showcase is not part of the production build", async ({ page }) => {
   const response = await page.goto("/showcase");
   expect(response?.status()).toBe(404);
-});
-
-test("the homepage gallery links every screen to its case study", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading", { level: 2, name: "A Closer Look" })).toBeVisible();
-  const links = page.locator(".parallax-gallery a");
-  await expect(links).toHaveCount(14);
-  for (const href of await links.evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute("href") ?? ""))) expect(href).toMatch(/^\/work\/(accessforge|risklens|ledger)$/);
-  for (const alt of await links.locator("img").evaluateAll((images) => images.map((image) => image.getAttribute("alt") ?? ""))) expect(alt.length).toBeGreaterThan(20);
-  await links.first().focus();
-  await expect(links.first().locator(".gallery-label")).toHaveCSS("opacity", "1");
 });
 
 test("the stack logos name themselves on keyboard focus and link to projects", async ({ page }) => {
@@ -113,13 +104,42 @@ test("navigation labels roll on keyboard focus without changing their names or s
   await expect(link.locator("[aria-hidden='true']").first()).toBeAttached();
 });
 
-test("featured projects stack as pinned panels on wide screens and stay a plain list under reduced motion", async ({ page }) => {
+test("selected work pins numbered panels of real screens, links each case study, and stays still under reduced motion", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  const items = page.locator(".project-stack-item");
+  const work = page.getByRole("region", { name: "Selected work" });
+  const items = work.locator(".work-item");
   await expect(items).toHaveCount(5);
   await expect(items.first()).toHaveCSS("position", "sticky");
-  await expect(page.getByRole("region", { name: "Selected work" }).getByRole("img")).toHaveCount(4);
+  // A pinned panel must fit the viewport, or the next one covers its link for good.
+  for (const height of await items.locator(".work-panel").evaluateAll((panels) => panels.map((panel) => panel.getBoundingClientRect().height))) expect(height).toBeLessThanOrEqual(900 - 64);
+  await expect(work.getByRole("link", { name: "Read the case study: AccessForge AI" })).toHaveAttribute("href", "/work/accessforge");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(items.first()).toHaveCSS("position", "static");
+  await expect(work.locator(".work-shot-0").first()).toHaveCSS("animation-name", "none");
+  // Four projects show three screens each; Rotation Index shows its dashboard and estimates table.
+  const screens = work.getByRole("img");
+  await expect(screens).toHaveCount(14);
+  await expect(work.getByRole("img", { name: /Model Available/ })).toBeVisible();
+});
+
+test("the hero name reads as one heading, Explore my work opens the projects, and the lines stay decorative and static under reduced motion", async ({ page }) => {
+  const lineRequests: string[] = [];
+  page.on("request", (request) => { if (/floating-lines/.test(request.url())) lineRequests.push(request.url()); });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const lines = page.locator(".hero-lines");
+  await expect(lines).toHaveAttribute("aria-hidden", "true");
+  await expect(lines).toHaveCSS("pointer-events", "none");
+  await expect(lines.locator("svg path")).toHaveCount(18);
+  const box = await lines.boundingBox();
+  expect(box?.width).toBeGreaterThan(1440 * 0.55);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("Rohin Pidathala");
+  await page.getByRole("link", { name: /LinkedIn/ }).first().click({ trial: true });
+  await page.getByRole("link", { name: "Explore my work" }).click();
+  await expect(page).toHaveURL(/#work$/);
+  await page.waitForTimeout(1500);
+  await expect(lines.locator("canvas")).toHaveCount(0);
+  expect(lineRequests).toEqual([]);
 });

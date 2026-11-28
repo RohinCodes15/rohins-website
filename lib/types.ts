@@ -105,6 +105,12 @@ export interface Certification {
 export interface StackEntry {
   readonly label: string;
   readonly category: string;
+  /** Local logo under public/stack; entries without one show their name alone. */
+  readonly logo?: string;
+  /** Brand colour revealed by the stack grid's spotlight. */
+  readonly accent?: string;
+  /** Single-colour logo that inverts in dark mode. */
+  readonly mono?: boolean;
 }
 
 export interface Site {

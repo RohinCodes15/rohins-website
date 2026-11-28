@@ -1,3 +1,4 @@
+import Magnet from "@/components/reactbits/magnet";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { site } from "@/content/site";
@@ -14,7 +15,7 @@ export function SiteFooter() {
       <Container className="gap-y-6">
         {site.email && (
           <p className="grid-main text-lead sm:text-h2">
-            <Link href={`mailto:${site.email}`} roll>{site.email}</Link>
+            <Magnet><Link href={`mailto:${site.email}`} roll>{site.email}</Link></Magnet>
           </p>
         )}
         <nav aria-label="Footer" className="grid-main">

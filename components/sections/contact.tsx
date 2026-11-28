@@ -1,3 +1,4 @@
+import Magnet from "@/components/reactbits/magnet";
 import { CopyButton } from "@/components/site/copy-button";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -10,7 +11,7 @@ export function Contact({ email, links, resume }: Pick<Site, "email" | "links" |
       <div className="grid-main grid gap-6">
         {email && (
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <a href={`mailto:${email}`} className="hover-underline text-h3 wrap-anywhere">{email}</a>
+            <Magnet><a href={`mailto:${email}`} className="hover-underline text-h3 wrap-anywhere">{email}</a></Magnet>
             <CopyButton text={email} label="Copy email" />
           </div>
         )}

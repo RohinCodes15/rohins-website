@@ -165,6 +165,368 @@ Checked and left unchanged:
 - Fixed a pre-existing type error in `tests/lab.spec.ts` that blocked `next build`.
 - Checks: lint and typecheck pass, 65 of 65 unit tests pass, the build passes the secret scan, and the smoke suite has 59 passed and 1 skipped. Screenshots at 390 and 1440 px in both themes. There is no overflow at 320, 1024, or 2560 px.
 
+## Hero Floating Lines (2026-11-27)
+
+- Owner request: React Bits Floating Lines in the right side of the homepage hero, from the free registry only. The registry item is `FloatingLines-TS-TW` (`https://reactbits.dev/r/FloatingLines-TS-TW.json`), installed with the pinned `shadcn` 4.23.1 by URL, so `components.json` is unchanged. It has no npm dependencies, so `package.json` and the lockfile are unchanged.
+- `components/reactbits/floating-lines.tsx` is the registry file. It keeps the MIT + Commons Clause notice (`components/reactbits/LICENSE.md`, copyright David Haz). Local changes: an `onUnavailable` callback (no WebGL2 context, or the shader fails to link) and ref syncing moved from render into an effect (`react-hooks/refs`). Upstream already pauses off-screen (IntersectionObserver) and in hidden tabs, and frees the program, buffer, VAO and context on unmount.
+- `components/editorial/hero-lines.tsx` (`HeroLines`) is rendered in the hero `<section>` in `app/page.tsx`, and `.hero-lines` is in `app/globals.css`:
+  - The server HTML is a static SVG drawing of the same composition. It reserves the box, so CLS is 0. It is the fallback without JavaScript, under reduced motion (also when it turns on live), without WebGL2, on a software rasterizer (SwiftShader, llvmpipe), with 2 or fewer cores, with Data Saver, and when the page holds under 30 fps for 2 s after the intro.
+  - Otherwise the WebGL chunk loads at idle time (1.2 s at most) and fades in over the drawing.
+  - Layout: from lg, the right 55% of the hero behind the text, and the hero gets `min-h-[min(42rem,100svh)]`. Below lg, a full-bleed band (15rem, or 20rem from sm) under the links. Masks fade every edge into the page.
+  - The layer is `aria-hidden` and `pointer-events: none`. Its pointer tracking listens on `window`, so links and the rail keep every click. Click swirl is off.
+- Tuning: three waves of 8 lines each, so every line sits exactly on one stop: white and ice, five electric-blue lines, one crimson. That gives no blended purple lines and leaves crimson as one thin line per wave.
+  - Desktop waves sit low and rise to the right, clear of the intro and the readout. The compact band keeps them centred.
+  - Speed 0.45, depth of field 0.65, parallax 0.12, mouse damping 0.035, bend radius 4.5 at strength -0.45.
+  - Dark: glow 0.55, brightness 0.7, screen blend. Light: the upstream ink mode at 0.8 opacity.
+  - The theme follows `data-theme` and the OS live.
+  - DPR is capped at 1.5, or 1.25 on coarse pointers.
+- Checks:
+  - lint and typecheck clean.
+  - 76/76 unit tests.
+  - Build with secret scan clean.
+  - Smoke: 75 passed, 3 skipped. The new test in `tests/home.spec.ts` covers the decorative layer, link hit-testing, and the reduced-motion static path with no WebGL request.
+  - Screenshots at 1440, 1024, 768 and 390 px in both themes: 0 overflow, 0 console errors. Before set, plus live (GPU Chrome), hover, pointer-exit and reduced-motion sets.
+- Lighthouse 13.6 on the local production build:
+  - Mobile: 93, 99, 99, 99, 98 (median 99; baseline 98). LCP 1.2 s, TBT 100–220 ms, CLS 0.
+  - Desktop: 100 on all runs, including with a GPU (live lines; TBT 10 ms).
+  - Accessibility 100, best practices 100. SEO 63 is the intentional non-production `noindex`.
+  - Headless Lighthouse renders through SwiftShader, so its mobile and default desktop runs measure the static path.
+- Found and fixed during the work:
+  - SVG presentation attributes ignore `var()`, so strokes go through `style`.
+  - SwiftShader stalled the main thread enough to time out the grid smoke test under parallel load. The software-renderer gate fixed it, and the suite went from 2.6 min to 60 s.
+- Not covered: Safari, Firefox and physical devices, the live path on a real phone GPU, and a screen reader pass. The layer is `aria-hidden`, so nothing new is announced.
+
+## Hero refinement: two-line name and vertical braid (2026-11-27)
+
+- Owner request: the lines sat too low and in a corner, and too much of the hero was empty. I compared two variations in GPU Chrome at 1440, 1024 and 390 px:
+  - A: single-line name with a larger visual.
+  - B: two-line name with an immersive visual.
+- B won. In A the single-line name is shorter than the rail's three-row span, so the grid stretched the rows (large gaps around the readout) and left about 250 px empty under the CTA. In B the name is a solid typographic mass that balances the braid, and the text rhythm stays even.
+- `app/page.tsx`:
+  - The name is one `<h1>` with one word per line, larger than the display token (`clamp(3.75rem, 1rem + 11vw, 11.5rem)`). A space between the spans keeps the accessible name "Rohin Pidathala".
+  - The readout moves into the main column under the titles at every width; on the right it sat under the braid.
+  - New "Explore my work" link to `#work`, rendered only when there are featured projects. It is full width below sm.
+  - The hero is `min-h-[min(100svh,48rem)]` from lg.
+- `app/globals.css`:
+  - `--action` and `--action-hover` (`light-dark(#0047ff, #2563eb)` and `light-dark(#0036c2, #1d4ed8)`): AA under white in both themes. `--signal-fill` measured 4.49:1 in dark, and axe caught it.
+  - `lib/design-tokens.test.ts` now asserts those pairs (written first; it failed until the tokens existed).
+  - The lines box is 58% wide from lg, full height. The left fade runs from 15% to 55% of the box.
+- `components/editorial/hero-lines.tsx`:
+  - Desktop waves are steeply rotated (top -1.4, middle 1.2, bottom -1.8), so the lines fall the full height as a crossing braid.
+  - 10 lines per wave (was 8). The line before crimson takes about 13% of its tint.
+  - Depth of field 0.2 (was 0.65), glow 0.25 (was 0.55), brightness 0.75, light-mode opacity 0.9.
+  - Bend radius 5 at -0.5, damping 0.04, parallax 0.15.
+  - The static fallback SVG is redrawn as the same braid.
+- `components/reactbits/floating-lines.tsx`: the WAVE_SHAPE top and bottom waves are brighter and sharper (light 0.6/0.55, depth 0.5/0.4; upstream 0.2/1 and 0.32/0.6). Noted in the file header.
+- Checks:
+  - lint and typecheck clean.
+  - 76/76 unit tests.
+  - Build with secret scan clean.
+  - Smoke: 75 passed, 3 skipped, including the axe runs in both themes. The hero smoke test also covers the heading's accessible name and the CTA reaching `#work`.
+  - Every hero control is hit-tested as clickable.
+  - Screenshots at 320, 390, 768, 1024, 1280, 1440 and 2560 px in both themes: 0 overflow, 0 console errors.
+- Lighthouse on the local production build:
+  - Mobile: 95, 98, 100, 99, 100 (median 99; baseline 98). LCP 1.2 s, TBT 70–250 ms, CLS 0.
+  - Desktop: 100 on all runs, including with a GPU.
+  - Accessibility 100, best practices 100.
+- Not covered: Safari, Firefox, physical devices, the live path on a phone GPU, and a screen reader pass of the split heading. The accessible name is asserted, but not heard.
+
+## Hero entrance (2026-11-27)
+
+- Request: React Bits Split Text on the hero name. The free registry item is `https://reactbits.dev/r/SplitText-TS-TW.json`. It depends on `gsap@^3.13.0` and `@gsap/react@^2.1.2`, registers the ScrollTrigger and SplitText plugins, and sets `visibility: hidden` on the text until hydration and font loading finish. The owner chose a CSS version of its rise effect instead, so nothing was installed: no new dependency and no registry change. With no React Bits code, no licence notice is needed (ARCHITECTURE D21).
+- Implementation:
+  - `app/page.tsx` splits the name into per-character `.hero-char` spans, indexed across both lines. The `h1` carries `aria-label={site.name}`, and the word spans are `aria-hidden`.
+  - `.hero-follow` with `--delay` marks the role line (0.55 s), readout (0.65 s) and introduction block with its links (0.8 s).
+  - `app/globals.css` (Hero entrance): characters use `hero-rise`, 0.8 s with `--ease-datum` (ease-out) and a 40 ms stagger, from opacity 0 and `translate: 0 0.22em`. That is about 40 px at the widest size, and in proportion on phones, where 40 px dropped the letters through the datum rule. Followers and the lines layer use `hero-fade` from opacity 0.2. The sequence ends at about 1.5 s. Everything sits inside `prefers-reduced-motion: no-preference`.
+  - Once per tab session: `components/editorial/hero-lines.tsx` waits for its own fade, the last to finish, then stores `hero-played` in sessionStorage. `HERO_PLAYED_SCRIPT` (`lib/hero-entrance.ts`, in the layout `<head>`) sets `<html data-hero-played>` before first paint on later full loads. Home and case studies are cross-document navigations, so this is the path that counts. A later in-app mount sets the attribute in a layout effect. Blocked storage plays the entrance on every load.
+- Timing choice: 40 ms × 13 + 0.8 s finishes the name at 1.32 s, inside the 1.5 s brief, as the introduction settles. 50 ms with 0.9 s ends the name at 1.55 s, after the introduction. 35 ms with 0.7 s ends it at 1.16 s, before the role line has faded in. Neither alternative was rendered side by side; the choice came from this arithmetic plus the frames at 150, 450, 900 and 1600 ms.
+- Floating Lines: unchanged apart from the container fade (0.2 s delay, 1.3 s) and the session flag. Cursor response, idle loading and the static fallback are as before.
+- Tests: `lib/hero-entrance.test.ts` runs the head script against a fake sessionStorage (set, unset, throwing). The homepage axe tests in `tests/home.spec.ts` and `tests/theme.spec.ts` now wait for the `hero-*` animations to finish. Before this, axe measured contrast mid-fade and failed (2.84:1 on the readout).
+- Checks:
+  - Lint and typecheck clean. 78/78 unit tests pass, and `hero-entrance.ts` has 100% coverage.
+  - Build passes with a clean secret scan.
+  - Smoke: 75 passed, 3 skipped (desktop and mobile Chromium).
+  - Playwright frames at 1440 px (dark and light), 820 px, 390 px and under reduced motion: CLS ≤ 0.0003, no hydration or page errors from this change, accessible name and text "Rohin Pidathala", no animation under reduced motion.
+  - The entrance does not replay after scrolling, Back from `/work/accessforge`, or reload in the same session.
+- Lighthouse 13.6 on the local production build:
+  - Mobile: 100 on all 5 runs (baseline median 99). LCP 1.2 s, TBT 40 ms, CLS 0.
+  - Desktop: 100 on all 3 runs, LCP 0.3 s.
+  - Accessibility 100, best practices 100.
+  - The first attempt, with fades from opacity 0, measured mobile 91–92 and LCP 3.3 s. The LCP element is the introduction paragraph.
+- Not covered: Safari, Firefox, physical devices, and a screen reader pass of the `aria-label` heading. Kerning across the per-character spans was checked only by eye at 1440 and 390 px.
+
+## Stack Chroma Grid (2026-11-27)
+
+- Request: React Bits Chroma Grid in place of the 44-row stack inventory, keeping the heading, intro line and logo assembly. Registry item `https://reactbits.dev/r/ChromaGrid-TS-TW.json` was installed with the pinned `shadcn` 4.23.1. The installed file matched the registry source byte for byte. It has no npm dependencies; `package.json`, `package-lock.json` and `components.json` are unchanged. The install landed at `components/ChromaGrid.tsx`; it was adapted into `components/reactbits/chroma-grid.tsx`, and the original was removed. The existing `components/reactbits/LICENSE.md` (MIT + Commons Clause) covers it, and the file header lists every local change. ARCHITECTURE D22.
+- Kept from upstream: one requestAnimationFrame loop writes `--chroma-x/y/power`, so moving the pointer never re-renders React. Also kept: per-area offsets, the smoothstep falloff mask, the grayscale base layer under a masked colour layer, the accent wash and the rim.
+- Changed:
+  - Logo tiles are buttons (contained 32 px logo plus name), not photo cards. Colours come from site tokens instead of the built-in purple-grey themes, and the Unsplash demo items, card-reveal mode, frame and info rows are removed.
+  - Keyboard focus (`:focus-visible`) aims the spotlight at the focused tile. The grid is one tab stop; arrows, Home and End move between tiles.
+  - A touch lift no longer drains the colour; the tapped tile stays lit until focus leaves.
+  - The base layer dims by opacity, not brightness, so white and black mono logos settle to the caption grey in both themes.
+- Logos: 24 Devicon v2.16.0 SVGs added to `public/stack`. They are under the existing MIT notice, were checked for scripts and external references (none), and are all served locally. React Native reuses `react.svg` and Motion uses Devicon `framermotion`. Flask, Motion, Vercel, Next.js and GitHub are mono and invert in dark mode. Ten entries have no Devicon logo and show their name: Expo, MapLibre GL JS, Pygame, PostGIS, Claude API, Hugging Face, OpenAI API, SciPy, Monte Carlo simulation and Statistical modeling. `StackEntry` gained optional `logo`, `accent` and `mono`. Each accent is the logo's main brand colour; mono and logo-less tiles fall back to `--signal`.
+- `components/sections/stack-explorer.tsx`:
+  - Keeps the six filters with their counts, `aria-pressed` active state and status line.
+  - The shared detail line under the grid shows the hovered, focused or tapped technology, its category and real project links. It keeps the last one shown, so the pointer can move down to the links.
+  - Each tile's `aria-describedby` reads its category and projects.
+  - Filtering runs inside `document.startViewTransition` with `flushSync`. `.stack-stage[data-filtering] .chroma-tile` gets a `view-transition-name` only during the change, so cross-page transitions capture nothing extra. Tiles reuse the existing 320 ms spring group timing; changes are instant without support or under reduced motion.
+  - `stack-rows-motion.tsx` was removed (D19 updated).
+- Columns follow the container (the 60rem centred column), not the viewport: 2, 3, 4, 6 and 8 at 18, 28, 40 and 52rem. Measured: 320 px gives 2 (137 px tiles), 390 and 412 px give 3, 768 px gives 6 (112 px), and 1024–2560 px give 8 (110–115 px). That is denser than the brief's starting points at tablet and small desktop, which keeps tile size even.
+- Visual comparison at 1440 px with the pointer on the grid, both themes, by setting the variables live:
+  - A: radius 160 px, grayscale 1, brightness dim 0.12. Lit about two tiles, and white mono logos stayed bright at rest.
+  - B: 240 px, grayscale 0.85, dim 0.05. Read as a wash, and idle logos kept a tint.
+  - C: 120 px, dim 0.25. Too tight to feel continuous.
+  - Chosen: 220 px, grayscale 1, opacity dim 0.4, rim 0.6, wash 0.35 × 0.5.
+  - Text-only tiles were first full-strength text and outweighed the logos; they are now muted body size.
+- Before and after screenshots of the region were taken at 1440 (dark and light), 768, 390 and 320 px.
+- Checks:
+  - Lint and typecheck clean. 79/79 unit tests pass, including the new check that every stack logo exists locally and that accents are consistent.
+  - Build passes with a clean secret scan.
+  - Smoke: 75 passed, 3 skipped, axe included in both themes. `tests/portfolio.spec.ts` now focuses TypeScript, asserts its description names AccessForge AI, and checks the detail link.
+  - Browser: 44 tiles, 0 overflow at 320–2560 px, and no console or page errors.
+  - Keyboard: one tab stop, arrows move, focus lights the spotlight, and Tab leaves the grid.
+  - Filter: Data shows 4 tiles and Languages shows 7 through a real View Transition (102 pseudo-element animations); All restores 44.
+  - Touch (Pixel 7): a tap shows React's detail, and the tile stays lit.
+  - No JavaScript: all 44 tiles render and the filters stay hidden.
+- Lighthouse 13.6 on the local production build:
+  - Mobile: 98, 99, 99, 99, 99 (median 99; previous run 100, long-standing baseline 99). LCP 1.2 s, CLS 0. TBT 110–160 ms, up from 40 ms, from hydrating 44 interactive tiles.
+  - Same 17 requests (logos below the fold load lazily). Page weight 389 KiB, up from 383 KiB.
+  - Desktop: 100 on all 3 runs.
+  - Accessibility 100, best practices 100.
+- Not covered:
+  - Safari and Firefox. View Transitions there degrade to an instant change.
+  - Physical touch devices and a screen reader pass.
+  - pandas' navy logo is faint at rest in dark mode, a limit of grayscale on a dark ground.
+  - `featuredStack` still lists its own 9 logo paths, which duplicate the new `logo` fields.
+- Without JavaScript, the project links that the old rows showed are not on the stack grid. Every project is still linked from Selected work.
+
+## Decrypted labels (2026-11-27)
+
+- Reference: React Bits `DecryptedText-TS-TW` (free). It depends on `motion@^12`, beside the pinned `motion` 14.14.0, and is 641 lines with a Motion span per character, so it was not installed; the pins are unchanged. `components/ui/decrypted-text.tsx` is a site-specific version of the same idea, and the file header credits React Bits; no React Bits code is used.
+- Behaviour:
+  - The label scrambles once, left to right, when it first scrolls into view (IntersectionObserver, then disconnected).
+  - One 40 ms interval; the total stays under 800 ms however long the label.
+  - Glyphs are uppercase letters, digits and a few symbols (`#%/+=<>`); digit labels scramble through digits only.
+  - Optional replay on pointer entry (`replayOn`).
+  - The DOM keeps one real text node. The scramble is a `data-scramble` attribute drawn by `.decrypt::after` over the real glyphs, which have a transparent fill, so the width, accessible text and test text never change and React never re-renders.
+  - The timer, observer and listener are cleaned up on unmount. Reduced motion shows the text still. No-JavaScript shows the server text.
+- Placements:
+  - Section numbers (`SectionHeading`: homepage, Research Lab, case studies).
+  - Selected work outline numbers, which replay on panel hover. The outline stroke carries over because the overlay inherits it.
+  - Status labels (`StatusMark`: Selected work and case studies).
+  - Case-study metadata labels (Status, Role, Year, Stack, Links, Repository), which replay on hover.
+  - GitHub Activity stat labels.
+  - Not on the name, paragraphs, navigation or headings.
+- Speed: the brief's 35–50 ms per update gives 40 ms ticks. Labels of up to 20 characters reveal one character per tick, and longer ones reveal several per tick to stay under 800 ms. Under the machine's load at the time (load average 120+), a finer side-by-side comparison of speeds was not reliable, so it was not done.
+- Browser checks (dev server, 1440 × 900):
+  - An in-page MutationObserver recorded "01" scrambling through digits (48, 91, 03, 04) and resolving; "In development" resolved left to right (`SR ZFJV…`, `In G3OY…`, `In de…`) with its real text unchanged throughout.
+  - Hovering a panel replayed the number.
+  - Width was unchanged: 92.6 px before and after.
+  - Final texts were correct: section numbers 01–05, statuses, and case-study labels.
+  - Reduced motion: no scramble. Pixel 7: no overflow and no errors.
+  - `/` and `/work/risklens` loaded with no console or page errors.
+- Checks: typecheck and lint clean; 79/79 unit tests; build passes with a clean secret scan; full smoke suite 73 passed and 3 skipped (`--workers=2`).
+
+## Magnet links (2026-11-27)
+
+- Registry item `https://reactbits.dev/r/Magnet-TS-TW.json`, installed with the pinned `shadcn` 4.23.1. The installed file matched the registry byte for byte. It has no npm dependencies; `package.json`, `package-lock.json` and `components.json` are unchanged. Adapted into `components/reactbits/magnet.tsx` under the existing MIT + Commons Clause `LICENSE.md`, with the changes listed in the header. Kept from upstream: one shared pointer listener, nearest-magnet arbitration, a spring solved in a requestAnimationFrame loop that writes `transform` (no React re-renders while the pointer moves), and touch pointers ignored.
+- Local changes:
+  - Defaults: 50 px reach, strength 4, 12 px cap.
+  - Spring: stiffness 120, damping 22, which is critically damped, so there is no overshoot.
+  - The settings ref syncs in an effect (react-hooks/refs).
+  - Reduced motion is tracked live.
+  - The wrapper and inner element are spans, not divs. The hero link row and the footer email sit in `<p>`, and a div there broke hydration on every page: the first browser run logged a hydration error and a flood of `parentNode` errors, fixed by the spans.
+- Placements:
+  - Hero "Explore my work" (`app/page.tsx`): full width on phones as before.
+  - Selected work "Read the case study" (`project-card.tsx`): a transformed ancestor would shrink a stretched `::after` to the link, so the panel-wide target is now a separate `aria-hidden`, `tabIndex={-1}` link (`z-[5]`) under the magnetic link (`z-[6]`). Hovering the panel still rolls the link text (`.work-panel:hover .work-cta` in `globals.css`).
+  - Case-study project links (Live demo, Source) in `app/work/[slug]/page.tsx`.
+  - Contact email (`components/sections/contact.tsx`).
+  - Footer email (`components/site/site-footer.tsx`).
+  - Not applied to navigation links, technology tiles or the A Closer Look section (removed earlier today).
+- Strength comparison on the hero link (pointer inside / 20 px / 45 px outside / 20 px below):
+  - A, strength 5 with an 8 px cap: 8 / 8 / 2.6 / 8 px. Barely reads on a large button.
+  - B, strength 4 with a 12 px cap: 11.9 / 12 / 3.3 / 10.4 px. Chosen.
+  - C, strength 3 with a 16 px cap: 15.9 / 15.9 / 4.3 / 13.9 px. Above the brief's 10–12 px and loose.
+  - Return to within 1 px: about 390 ms with stiffness 120 and damping 22, and about 320 ms with 170 and 26. The first was kept for the brief's roughly 450 ms full settle.
+- Browser checks (dev server, 1440 × 900 unless noted):
+  - Clicking mid-movement (4–6 px offset) lands on `#work`.
+  - Selected work: the link moves about 11 px; there is one focusable link per panel; clicking the link or a screenshot opens the case study.
+  - After six rapid sweeps over the footer email, it rests at 0 px.
+  - Contact email moves about 11.7 px; a case-study Live demo link moves about 9.3 px with its href intact.
+  - Tab reaches the hero link with its 2 px solid focus outline.
+  - Reduced motion: 0 px. Touch (Pixel 7): a tap gives 0 px and follows the link; the hero link keeps 368 of 412 px width.
+  - `/`, `/work/risklens` and `/work/ledger` load with no console or page errors.
+- Checks: lint clean; typecheck; 79/79 unit tests; build passes; full smoke suite 73 passed, 3 skipped.
+- Not covered: Safari, Firefox, physical devices and screen readers. The magnet moves only the visual box; the link's hit area moves with it by at most 12 px.
+
+## A Closer Look removed (2026-11-27)
+
+- Owner request: remove the section entirely.
+- Removed:
+  - The homepage section and its rail and nav entry.
+  - `components/editorial/exhibition.tsx` and the `.look-*` styles.
+  - `exhibits` and its `Exhibit` type from `content/gallery.ts`.
+  - The two detail crops made only for it (`accessforge/destinations-detail.jpg`, `portfolio/spotlight-detail.jpg`).
+  - Its unit test, home smoke test and the no-repeat check, and its entry in the theme spec's tab order.
+- Kept: `ParallaxGallery` and `lib/gallery.ts` (case-study galleries) and `access-forge-overview.jpg` (AccessForge case-study figure).
+- Checks:
+  - Lint clean; typecheck; 79/79 unit tests; build passes.
+  - Smoke: 73 passed and 3 skipped. The two fewer are the removed A Closer Look test on desktop and mobile.
+  - The page's h2s are now Selected work, Tech Stack, Research and interests, Activity and Contact, with no overflow.
+- The section notes below are history.
+
+## A Closer Look exhibition (2026-11-27)
+
+- Problem: after Selected work took 13 screens, the Skiper 30-style parallax gallery held 5 leftovers (2 RiskLens, 3 Ledger), uncaptioned, cropped to 4:5 and with ragged columns.
+- References checked:
+  - Skiper 30 needs `framer-motion` and `lenis`.
+  - React Bits `CircularGallery-TS-TW` and `FlyingPosters-TS-TW` are WebGL; they would be a second context beside Floating Lines.
+  - `PixelTransition-TS-TW` has no dependencies and no WebGL.
+  - None was imported. Their ideas were tried in CSS on a temporary dev route (`app/showcase/look`, since removed).
+- Variations, screenshotted at 1440 px:
+  - A, an editorial bento of captioned exhibits in rows of 7 + 5 columns, alternating sides: 1,454 px.
+  - B, a curved horizontal track (scroll-snap with a `view(inline)` rotateY curve): 680 px, but most exhibits sit off-screen and it needs horizontal scrolling.
+  - C, one large exhibit per row with a stepped clip reveal and perspective: 3,155 px, too long.
+  - Chosen: A.
+- Content (`exhibits` in `content/gallery.ts`, replacing `closerLook`): six exhibits, each with project, title, caption and, where relevant, a data label. None repeats a Selected work screen, and a unit test enforces this.
+  - AccessForge app shell (`access-forge-overview.jpg`, the case-study figure; the caption notes the API was stopped, so counts read 0).
+  - AccessForge destination filters: a 600 × 500 detail crop from `overview-map.jpg`.
+  - Ledger academy, lesson and scam screens as one phone group, labelled "Simulated market with pretend cash".
+  - RiskLens value at risk and drawdown, each labelled "Example portfolio: 50/50 AAPL and MSFT".
+  - Portfolio spotlight: a 720 × 360 detail crop from `stack.jpg`.
+  - Ledger went from 3 of 5 items to 1 of 6.
+- Implementation:
+  - `components/editorial/exhibition.tsx` (`Exhibition`) and `.look-*` in `globals.css`.
+  - Each exhibit's screens share a row height (`--look-h`, up to 22rem) and are bottom-aligned, so captions start level.
+  - Screens show whole at their own aspect ratio: no cropping or stretching, and no frame beyond a hairline.
+  - The project link (mono, ink, with an accent square) covers the exhibit and goes to the case study.
+  - Restrained parallax: ±1.25rem on a view timeline, off under reduced motion. Hover or focus lifts the screens 0.375rem.
+  - Layout: one column below 640 px, two to 1024 px, 7 + 5 from there.
+  - `ParallaxGallery` stays for the case-study galleries (Ledger's nine screens). It is no longer on the homepage.
+- Heights: 1,847 px at 1440 (before 1,118, with 5 uncaptioned screens), 1,395 px at 768 and 2,405 px at 390. No overflow and no errors.
+- Fixed during checks: axe flagged the accent-coloured 13 px project labels at 4.0–4.3:1, so the labels are ink with an accent marker.
+- Checks:
+  - Lint and typecheck clean; 80/80 unit tests (an exhibits test replaces the `closerLook` one).
+  - Build passes.
+  - Full smoke suite: 75 passed, 3 skipped. The new home test checks six exhibits, case-study links, titles, alt text and the data labels.
+- Before and after screenshots: scratchpad `look/before-*` and `look/after-*`.
+- Lighthouse 13.6 on the local production build, with the machine quieter than earlier runs (load average 3.6–5.5), and including the Rotation Index change below:
+  - Mobile: 93, 98, 97, 98, 98 (median 98; earlier baseline 99). LCP 1.2–1.3 s, TBT 150–320 ms, CLS 0, 21 requests, 434 KiB.
+  - Desktop: 100 and 100, LCP 0.3 s.
+  - Accessibility 100, best practices 100.
+
+## Rotation Index screen (2026-11-27)
+
+- Update, same day (supersedes the locked frame below):
+  - The owner authorised the season download. On a fresh clone in the scratchpad I followed the repository README:
+    - One raw game was fetched by hand as the storage preflight's size sample; the preflight needs at least one cached game.
+    - The preflight then passed: 2.0 GB required against 30 GB free.
+    - `possessions_loader.py` downloaded 1,229 more games with 0 failures.
+    - `--rebuild-all` rebuilt 1,229 and left 1 unchanged.
+    - `--offline` audit: 1,230 of 1,230 validated, 0 failed, complete.
+    - `fit_possession_ridge()` exited 0.
+  - The dashboard (`python app.py`) then showed Model Available and the estimates table.
+  - Rotation Index now shows two real captures: `public/work/rotation-index/dashboard.jpg` (1440 × 900) and `estimates.jpg` (1152 × 880). The video frame `locked.jpg` was removed.
+  - The status is `completed` (owner request). The status note now says all 1,230 games validate and the dashboard shows estimates; the old note said estimates stayed hidden.
+  - Checks: unit tests 80/80; build passes; full smoke suite 75 passed, 3 skipped, with the home test now expecting 14 screens including the Model Available dashboard.
+
+- Owner request: use the video in the repository. `RohinCodes15/Rotation-Index` has `media/launch.mp4` (21 s, 1920 × 1080, the same file as `brag-output/brag.mp4`) and `brag-output/brag.jpg`.
+- Provenance: per `brag-output/brag-plan.md`, the video recreates the dashboard from its own markup, `style.css` and real outputs; it is not a screen recording. It shows the app at 1,229 / 1,230 · Model Locked, then dramatizes the unlock to 1,230 · Available with estimates, an audit and diagnostics.
+- The site's status note says estimates stay hidden until all 1,230 games validate. The owner confirmed the season is still locked, so only the opening locked frame is used (2.2 s, cropped to 1200 × 750): `public/work/rotation-index/locked.jpg`, 53 KB. The audit frames show 0 or 1,230 validated, never the real 1,229, and later frames show estimates, so none is used.
+- `workScreens["rotation-index"]` holds the frame, with alt text naming it as the launch video's recreation, and the accent is the scoreboard red `#c8102e`.
+- Rotation Index now renders one lead screen instead of its status note. The status mark still reads "In development".
+- Checks: typecheck and lint clean; 80/80 unit tests (the `workScreens` test covers the new file); build passes; the home smoke spec is 19 passed and 1 skipped, now asserting 13 screens and the locked frame; renders at 1440 px (both themes) and 390 px with no overflow.
+
+## Selected work exhibition (2026-11-27, supersedes the fan below)
+
+- Brief: a premium editorial exhibition that combines Skiper 17 (depth stacking), Skiper 34 (screenshot reveal), Skiper 30 (editorial parallax) and Bounce Cards (overlapping previews). No new research phase; findings from the fan pass were reused.
+- Variations: three built on shared markup, as CSS overrides on a temporary dev-only route (`app/showcase/work`, since removed). Screenshotted at 1440 px with scroll and hover.
+  - A, cinematic numbered panels pinned with depth: the clearest hierarchy, imagery in seven columns, and depth from stacking. Its two bugs are fixed (below).
+  - B, screens stacked at rest that spread wide on hover: a lively hover, but at rest it repeated the fan this replaces, and the spread overflowed.
+  - C, one large screenshot above the copy, tilting in: the most readable screens, but the number and title dropped to second place and each project took about 1.5 screens of scrolling.
+  - Chosen: A.
+- Implementation:
+  - `components/editorial/project-card.tsx` (`SelectedWork` and `ProjectCard`). Each panel has three grid areas: head (outline number in the accent that fills on hover or focus, then the title), media and body. The body holds the summary; status, role and year; technology tags tinted with the accent; and the prominent "Read the case study" text-roll link (Skiper 58). That link's hit area covers the panel, and its name is "Read the case study: {title}", which contains the visible text.
+  - Desktop places copy in five columns and screens in seven. Mobile orders head, screens, body, with no pinning.
+- Screens (`.work-media` and `.work-shot-*` in `globals.css`):
+  - No frame or letterbox; each shows at its own aspect ratio with a hairline in the accent.
+  - The lead is 86% of the column in perspective (rotateY −6°); two more overlap at its lower corners. Hover or focus squares the lead and spreads the others.
+  - Ledger's phone screens stand in a row with the lead raised in the middle.
+  - AccessForge leads with its overview map and planner interface; RiskLens with its Monte Carlo chart over the frontier and benchmark charts.
+  - Rotation Index shows its real status note as display type.
+- Accents (`workAccents`, `content/gallery.ts`) were sampled from the screens with a canvas pixel count:
+  - AccessForge: barrier red `#d84860`.
+  - RiskLens: chart blue `#3078a8`.
+  - Ledger: market green `#00a848` (`#008a3c` in light mode).
+  - Portfolio: `--probe`.
+  - Rotation Index: none, so it stays in ink.
+- Scroll (CSS scroll timelines only, no JavaScript):
+  - Pinning starts at 1024 × 600 px with no reduced-motion preference (first 800 px; lowered the same day because a 1440 × 780 laptop window only pinned when zoomed out). In pinned mode the number, title and screens also scale with viewport height (`svh`), so panels fit short windows. Each item is sticky at the top with the page background and a hairline-and-shadow edge.
+  - The covered panel recedes (perspective, rotateX 5°, scale 0.9, fade) across its share of the list's timeline.
+  - The incoming lead screen reveals with a clip from below, and the others follow within entry. Revealing inside entry matters: a pinned panel's screens stop moving, and the first build left the lead clipped.
+  - All of it is scrubbed, so it reverses on the way up, and there is no extra scroll distance beyond the panels.
+  - Pinning needs each panel to fit the viewport, or the next one covers its link for good. Measured at 1024×600, 1280×650, 1366×768, 1440×700, 1440×780, 1470×830 and 1920×1080: panels are 373–551 px, each within its budget (viewport minus padding, from 546 px). `tests/home.spec.ts` asserts it at 1440×900.
+- Not applied:
+  - Magnet: the codebase has no Magnet component.
+  - Category labels: projects have no category field, so role and stack tags stand in.
+- Before and after screenshots at 1440 (dark and light), 768 and 390 px: scratchpad `sw/before-*` and `sw/after-*`.
+- Checks:
+  - Lint and typecheck clean. 80/80 unit tests pass. Build passes with a clean secret scan.
+  - Smoke: 75 passed, 3 skipped when run alone (`--workers=2`). A run alongside screenshot jobs on the loaded machine timed out in unrelated tests.
+  - Axe found and I fixed a label-in-name mismatch on the case-study links.
+  - The updated Selected work test checks 5 items, pinning, the link name and href, reduced motion (static and no animation), 12 screens and the Rotation Index note.
+  - Browser at 320–1920 px: no horizontal overflow, nothing past the viewport with any panel hovered, and no console errors.
+- Lighthouse 13.6 on the local production build, with another app holding about 115% CPU (load average 22–31 during the runs):
+  - Mobile: 90, 96, 85, 93, 90. LCP 1.3–1.6 s, TBT 240–590 ms, CLS 0, 21 requests, 427 KiB, up from 395 KiB because lead screens are requested larger.
+  - Desktop: 100 on all 3 runs, LCP 0.3–0.5 s.
+  - Accessibility 100, best practices 100.
+  - The mobile numbers are not comparable with the clean 99 baseline. Rerun with other apps closed. The section adds no client JavaScript.
+- Not covered: Safari and Firefox (Firefox has no scroll timelines, so panels do not pin and screens do not reveal); physical devices; a screen reader pass.
+
+## Selected work fan (2026-11-27)
+
+- References studied, with registry items checked:
+  - `skiper-ui.com/registry/skiper17.json` depends on `gsap`, `@gsap/react`, `framer-motion` and `lenis`. It pins a stage where each next card slides up from y 100% while the covered card scrubs to scale 0.7 and rotation 5°.
+  - `skiper34.json` (`framer-motion`, `lenis`): sticky frames scale away and rotate while the image inside counter-rotates at 1.25× scale.
+  - `skiper30.json` (`framer-motion`, `lenis`): parallax columns, already the basis of A Closer Look.
+  - All three are free with "attribution to Skiper UI is required when using the free version". No Skiper code is used; the idea is credited in `project-card.tsx`.
+  - React Bits `BounceCards-TS-TW`, `CircularGallery-TS-TW` and `FlyingPosters-TS-TW` have no npm dependencies (MIT + Commons Clause). None was imported.
+- Concepts were built as a temporary dev-only route (`app/showcase/work`, since removed) on real content and screenshotted at 1440 px:
+  - A, cinematic panels: the recede and counter-rotate worked, but each project had one screen in a grey surface box that read as a card.
+  - B, large type with fanned screens: the most distinctive, and screens sit without a box. Wide charts first overflowed on hover and three cards overflowed at 390 px.
+  - C, screenshot first with perspective: a large screen in a surface box, the nearest to a generic card.
+  - Chosen: B, with A's scroll-driven opening and Bounce Cards' hover spread.
+- Implementation:
+  - `components/editorial/project-card.tsx`: `ProjectStack` became `SelectedWork`; `ProjectCard` takes `screens`. Title, link, view-transition name, status, role, year, stack and "Read case study" are kept.
+  - `.work-fan` and `.work-card` in `globals.css` replace `.project-stack` and `stack-recede`.
+  - Each screen is `min(58%, fan height × its aspect ratio)` wide, so phones are narrow and charts wide. Outer screens stay within the fan at full spread and hover: 50% ± 29% ± 21%.
+  - The work titles use line-height 1.15, because the roll effect clips each word and 0.95 cut Ledger's descender.
+- Screens (`workScreens`, `content/gallery.ts`):
+  - AccessForge: overview, barrier map, planner story.
+  - RiskLens: Monte Carlo, efficient frontier, vs SPY.
+  - Ledger: home, market, battle.
+  - Portfolio: home plus two new captures from a local production build (1440 × 900, 2026-11-27): `public/work/portfolio/stack.jpg` (Tech Stack grid with the spotlight, dark) and `case-study.jpg` (AccessForge case study, light).
+  - Rotation Index: none; it shows its status note.
+  - A Closer Look now shows the remaining 5 screens (RiskLens VaR histogram and drawdown; Ledger scam, portfolio and lesson) and no longer repeats any (owner decision).
+- Checks:
+  - Lint and typecheck clean.
+  - 80/80 unit tests pass, including a new `workScreens` test (files exist, at most three per featured project, filed under their own project, alt text and size).
+  - Build passes with a clean secret scan.
+  - Smoke: all specs pass. Home is 19 passed and 1 skipped; the first full run was 73 passed, 3 skipped and 2 failed only on the gallery count, now updated. The new test checks 5 rows, 12 screens, the Rotation Index note, no animation under reduced motion, and no screen shared with A Closer Look.
+  - Browser at 320, 390, 1024 and 1440 px in both themes and under reduced motion: no overflow and no errors. No card passes the viewport with every row hovered.
+- Lighthouse 13.6 on the local production build. Runs were noisy: another app held about 110% CPU (load average 12–28).
+  - Mobile: 85, 97, 92, 89, 92, then 93, 89, 92, 98, 98. The quieter runs scored 98 with TBT 170 ms, against the earlier 99 and 110 ms.
+  - LCP 1.3–1.4 s, up from 1.2 s, and CLS 0.
+  - Requests rose from 17 to 21 (six 4–26 KB work screens load lazily near the fold) and page weight from 389 to 395 KiB.
+  - The added cost is in the existing framework chunk's script evaluation, which varied with load. The section adds no client JavaScript (server component plus CSS).
+  - Desktop: 100 on all 3 runs, LCP 0.4 s.
+  - Accessibility 100, best practices 100.
+- Not covered:
+  - A clean-machine Lighthouse rerun. Rerun with other apps closed before treating the mobile score as final.
+  - Safari and Firefox; Firefox has no scroll timelines, so the fan rests open there.
+  - Physical devices and a screen reader pass.
+- A Closer Look's 5 screens leave two columns short until the parallax drift moves them.
+
 ## Verified locally
 
 Results from the final run on 2026-11-26, after the production readiness audit. The same steps also run in GitHub Actions (`.github/workflows/ci.yml`) on every push to `main`.
@@ -207,7 +569,7 @@ B1 (more content) and B6 (terrain on real devices) do not block a first launch: 
 
 ## For the independent engineering audit
 
-- Start with `AGENTS.md`, then `docs/ARCHITECTURE.md` (decisions D1–D19) and this file.
+- Start with `AGENTS.md`, then `docs/ARCHITECTURE.md` (decisions D1–D20) and this file.
 - Reproduce: `npm ci && npm run lint && npm run typecheck && npm test && npm run build && npm run test:smoke` (Node 24). No secrets are needed: without `GITHUB_CONTRIBUTIONS_TOKEN`, Activity renders its unavailable state.
 - Highest-risk areas to review: `lib/github/` (credential handling, validation, caching), `next.config.ts` (CSP with `'unsafe-inline'` for the theme script, §10), `scripts/check-secrets.mjs`, and `content/projects.ts` (every claim names its source).
 - Every published fact should trace to a repository README, `gh` data, or a dated command output recorded here. Flag any that do not.

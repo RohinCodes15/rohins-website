@@ -1,3 +1,4 @@
+import { DecryptedText } from "@/components/ui/decrypted-text";
 import { Fragment, type CSSProperties } from "react";
 import { activityMonths, activityStats, formatActivityDate, monthColumns } from "@/lib/github/calendar";
 import type { ContributionCalendar } from "@/lib/github/validate";
@@ -10,7 +11,7 @@ const levels = ["bg-terrain-0", "bg-terrain-1", "bg-terrain-2", "bg-terrain-3", 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex min-w-0 flex-col">
-      <dt className="order-2 mt-1 font-mono text-meta text-text-2">{label}</dt>
+      <dt className="order-2 mt-1 font-mono text-meta text-text-2"><DecryptedText text={label} /></dt>
       <dd className="order-1 text-metric text-[light-dark(#2563eb,#3b82f6)]"><AnimatedNumber value={value} /></dd>
     </div>
   );

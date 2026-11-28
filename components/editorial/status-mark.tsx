@@ -1,4 +1,5 @@
 import { PROJECT_STATUS_LABELS } from "@/lib/content";
+import { DecryptedText } from "@/components/ui/decrypted-text";
 import type { ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,7 @@ export function StatusMark({ status, className }: { status: ProjectStatus; class
         aria-hidden="true"
         className={cn("size-1.5 shrink-0", status === "completed" ? "bg-text" : "border border-text")}
       />
-      {PROJECT_STATUS_LABELS[status]}
+      <DecryptedText text={PROJECT_STATUS_LABELS[status]} />
     </span>
   );
 }
